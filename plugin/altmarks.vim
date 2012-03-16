@@ -176,9 +176,11 @@ function! s:registermarks(attatch) "{{{
   endfor
 
   call add(s:markslist, currentinfo)
+  let markslistlen = len(s:markslist)
+  let navi = '('.markslistlen.'/'.markslistlen.')'
   redraw|echo ''
-  echo 'AltMarks: Registered; '.currentinfo['time']. currentinfo['plus']. currentinfo['protect'].'; "'. currentinfo['ctx'].'"'.currentinfo['attatch']
-  let s:lastidx = len(s:markslist)-1
+  echo 'AltMarks: Registered; '.currentinfo['time']. currentinfo['plus']. currentinfo['protect'].navi.'; "'. currentinfo['ctx'].'"'.currentinfo['attatch']
+  let s:lastidx = markslistlen-1
 endfunction "}}}
 
 
