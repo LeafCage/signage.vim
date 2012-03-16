@@ -152,6 +152,11 @@ endfunction "}}}
 
 
 function! s:registermarks(attatch) "{{{
+  let currentpath = expand('%:p')
+  if currentpath == ''
+    echoerr 'AltMarks: No name buffer cannot mark.'
+    return
+  endif
   let attatch = ''
   if a:attatch
     let attatch = input('AltMarks: ')
@@ -166,7 +171,7 @@ function! s:registermarks(attatch) "{{{
   let col = col('.')
   let start = col-15 < 0 ? 0 :col-15
   let context = substitute(strtrans(getline('.')[(start):col+15]), '<\x\x>','','g')
-  let currentinfo = {'time':marktime, 'path':expand('%:p'), 'pos':getpos('.'), 'ctx':context, 'attatch':attatch, 'plus': '', 'protect': ''}
+  let currentinfo = {'time':marktime, 'path':currentpath, 'pos':getpos('.'), 'ctx':context, 'attatch':attatch, 'plus': '', 'protect': ''}
   for picked in s:markslist
     if [picked['path'],picked['pos'][1]] == [currentinfo['path'],currentinfo['pos'][1]]
       let currentinfo['plus'] = picked['plus'].'+'
@@ -179,7 +184,7 @@ function! s:registermarks(attatch) "{{{
   let markslistlen = len(s:markslist)
   let navi = '('.markslistlen.'/'.markslistlen.')'
   redraw|echo ''
-  echo 'AltMarks: Registered; '.currentinfo['time']. currentinfo['plus']. currentinfo['protect'].navi.'; "'. currentinfo['ctx'].'"'.currentinfo['attatch']
+  echo 'AltMarks: Registered; '.currentinfo['time']. currentinfo['plus'].' '. currentinfo['protect'].navi.'; "'. currentinfo['ctx'].'"'.currentinfo['attatch']
   let s:lastidx = markslistlen-1
 endfunction "}}}
 
@@ -213,7 +218,7 @@ function! s:cycle_marks(ascending) "{{{
   if return
     let navi = '('.(s:lastidx+1).'/'.(markslistlen+1).')'
     redraw|echo ''
-    echo 'AltMarks: '.s:markslist[s:lastidx]['time']. s:markslist[s:lastidx]['plus'].s:markslist[s:lastidx]['protect']. navi.'; '.'"'.s:markslist[s:lastidx]['ctx'].'"'.s:markslist[s:lastidx]['attatch']
+    echo 'AltMarks: '.s:markslist[s:lastidx]['time']. s:markslist[s:lastidx]['plus'].' '.s:markslist[s:lastidx]['protect']. navi.'; '.'"'.s:markslist[s:lastidx]['ctx'].'"'.s:markslist[s:lastidx]['attatch']
     return
   endif
 
@@ -237,7 +242,7 @@ function! s:cycle_marks(ascending) "{{{
 
   let navi = '('.(s:lastidx+1).'/'.(markslistlen+1).')'
   redraw|echo ''
-  echo 'AltMarks: '.s:markslist[s:lastidx]['time']. s:markslist[s:lastidx]['plus'].s:markslist[s:lastidx]['protect']. navi.'; '.'"'.s:markslist[s:lastidx]['ctx'].'"'.s:markslist[s:lastidx]['attatch']
+  echo 'AltMarks: '.s:markslist[s:lastidx]['time']. s:markslist[s:lastidx]['plus'].' '.s:markslist[s:lastidx]['protect']. navi.'; '.'"'.s:markslist[s:lastidx]['ctx'].'"'.s:markslist[s:lastidx]['attatch']
 endfunction "}}}
 
 
