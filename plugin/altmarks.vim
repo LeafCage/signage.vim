@@ -15,7 +15,6 @@ au BufWritePost .altmarks call <SID>updatealtmarks()
 function! s:updatealtmarks() "{{{
   let tmp = readfile(fnamemodify(g:altmarks_dir, ':p').'.altmarks')
   let s:markslist = map(tmp, 'eval(v:val)')
-  bdelete
 endfunction "}}}
 
 au VimLeavePre * call <SID>write_markfile()
@@ -133,7 +132,7 @@ function! s:handlemark(command) "{{{
           call remove(s:markslist, s:lastidx)
           let target .= picked['time'].picked['plus'].picked['protect'].'"'.picked['ctx'].'" '
         elseif a:command == 'Remove plus'
-          let picked['plus'] = ''
+          let picked['plus'] = ' '
           let target .= picked['time'].picked['plus'].picked['protect'].'"'.picked['ctx'].'" '
         elseif a:command == 'Protect'
           let picked['protect'] = picked['protect'] == '' ? '[*]' : ''
@@ -146,7 +145,9 @@ function! s:handlemark(command) "{{{
   if target == ''
     echo 'AltMarks: Such mark is not found.'
   else
-    echo 'AltMarks: '.a:command.'; '.target
+    let navi = '('.s:lastidx.'/'.len(s:markslist).')'
+    redraw|echo ''
+    echo 'AltMarks: '.a:command.'; '.target.navi
   endif
 endfunction "}}}
 
@@ -171,7 +172,7 @@ function! s:registermarks(attatch) "{{{
   let col = col('.')
   let start = col-15 < 0 ? 0 :col-15
   let context = substitute(strtrans(getline('.')[(start):col+15]), '<\x\x>','','g')
-  let currentinfo = {'time':marktime, 'path':currentpath, 'pos':getpos('.'), 'ctx':context, 'attatch':attatch, 'plus': '', 'protect': ''}
+  let currentinfo = {'time':marktime, 'path':currentpath, 'pos':getpos('.'), 'ctx':context, 'attatch':attatch, 'plus': ' ', 'protect': ''}
   for picked in s:markslist
     if [picked['path'],picked['pos'][1]] == [currentinfo['path'],currentinfo['pos'][1]]
       let currentinfo['plus'] = picked['plus'].'+'
