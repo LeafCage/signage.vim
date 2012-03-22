@@ -160,7 +160,7 @@ function! s:registermarks(attatch) "{{{
   endif
   let attatch = ''
   if a:attatch
-    let attatch = input('AltMarks: ')
+    let attatch = input('AltMarksInput: ')
     if attatch != ''
       let attatch = "\n".attatch
     else
@@ -170,7 +170,7 @@ function! s:registermarks(attatch) "{{{
 
   let marktime = strftime('%y/%m/%d_%H:%M:%S')
   let col = col('.')
-  let start = col-15 < 0 ? 0 :col-15
+  let start = col-20 < 0 ? 0 :col-20
   let context = substitute(strtrans(getline('.')[(start):col+15]), '<\x\x>','','g')
   let currentinfo = {'time':marktime, 'path':currentpath, 'pos':getpos('.'), 'ctx':context, 'attatch':attatch, 'plus': ' ', 'protect': ''}
   for picked in s:markslist
@@ -228,7 +228,6 @@ function! s:cycle_marks(ascending) "{{{
     let s:lastidx = markslistlen
   elseif s:lastidx > markslistlen
     let s:lastidx = 0
-  else
   endif
 
   let file = s:markslist[s:lastidx]['path']
@@ -252,3 +251,8 @@ endfunction "}}}
 "sign placeで見えるように
 "unite表示
 "mv カーソル行がマークされているか否か
+"マーカーを色々付加できるようにする[修正するとか]
+"[fixed1]タグ、[fixed2]タグなどの自動グループ化機能
+"   [fixed1]モードに切り替えたら以後マークは[fixed1]グループに自動で属する
+"グループは専用ファイルで管理？それともグローバル変数で？（グループ名を決める"のが面倒なので数字を振る形式でやりたい（細かく書くのならコメントを付けるのと"大して変わらな印だし
+"ふせん。コメント。マーキング。グループ管理。テスト部分の記述に分かるようにsignできる。
