@@ -1,20 +1,25 @@
 if exists('g:loaded_altmarks')| finish| endif| let g:loaded_altmarks = 1
+let save_cpo = &cpo| set cpo&vim
+let g:altmarks_lclib = 'v1'
 
 "Variables "{{{
 if !exists('g:altmarks_dir')
   let g:altmarks_dir = '~/.altmarks/'
+endif
+if !exists('g:altmarks_shiftgroup_pat')
+  let g:altmarks_shiftgroup_pat = '@'
 endif
 let s:altmarks_dir = fnamemodify(g:altmarks_dir, ':p')
 unlet g:altmarks_dir
 
 if !exists('g:markgroups')
   let g:markgroups = [
-        \{'name': 'Default','enablesign':0, 'char': '', 'linehl': '', 'charhl': ''},
-        \{'name': 'Debug','enablesign':1, 'char': '修', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
-        \{'name': 'Delete','enablesign':1,  'char': '消', 'linehl': 'linehl_purple', 'charhl': 'texthl_purple'},
-        \{'name': 'Issue','enablesign':1,  'char': '問', 'linehl': 'linehl_red', 'charhl': 'texthl_red'},
-        \{'name': 'TODO','enablesign':1, 'char': 'TD', 'linehl': 'linehl_blue', 'charhl': 'texthl_yellow'},
-        \{'name': 'Note','enablesign':1,  'char': '記', 'linehl': 'linehl_green', 'charhl': 'texthl_green'},
+        \{'name': 'Debug', 'limit':0, 'char': '修', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
+        \{'name': 'Pending', 'limit':0, 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
+        \{'name': 'Issue', 'limit':0, 'char': '問', 'linehl': 'linehl_red', 'charhl': 'texthl_red'},
+        \{'name': 'Delete', 'limit':0, 'char': '消', 'linehl': 'linehl_purple', 'charhl': 'texthl_purple'},
+        \{'name': 'Access', 'limit':0, 'char': '道', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
+        \{'name': 'Note', 'limit':0, 'char': '記', 'linehl': 'linehl_green', 'charhl': 'texthl_green'},
         \]
 endif
 "Default: 特に設定なし
@@ -22,6 +27,7 @@ endif
 "Delete: 安全を確認したら後で消す
 "crrent: 現在進行中
 "Note: メモ
+"TODO:
 "if filereadable(s:altmarks_dir.'markgroups')
 "  let tmp = readfile(s:altmarks_dir.'markgroups')
 "  let g:markgroups = map(tmp, 'eval(v:val)')
@@ -46,50 +52,53 @@ let s:markslistpoi = -1
 
  "}}}
 
+
+
 augroup altmarks
   au!
-  au BufRead * call <SID>Restore_sign()| let b:altmarks_lnum_changedvalue = 0
+  "au BufRead * call <SID>Restore_sign()| let b:altmarks_lnum_changedvalue = 0
+  au BufRead * call <SID>restore_sign()
   au BufEnter * let s:crrpath = expand('%:p')
-  au BufWritePost altmarks call <SID>Updatealtmarks()
-  au VimLeavePre * call <SID>Write_markfile()
+  "au BufEnter * call <SID>restore_sign()
+  au BufWritePost altmarks call <SID>updatealtmarks()
+  au VimLeavePre * call <SID>write_markfile()
 augroup END
-function! s:Restore_sign() "{{{
-  if exists('g:disable_sign_at_loaded')
+
+function! s:restore_sign() "{{{
+  let crrpath = expand('%:p')
+  if exists('g:disable_sign_at_loaded') || crrpath == ''
     return
   endif
   let crrbufnr = bufnr('%')
   for pickedmark in s:markslist
-    if pickedmark.path != s:crrpath
+    if pickedmark.path != crrpath
       continue
     endif
     for pickedgroup in g:markgroups
       if pickedmark.group != pickedgroup.name
         continue
       endif
-      if pickedgroup.enablesign
-        exe 'sign define '.pickedgroup['name'].' text='.pickedgroup['char'].' linehl='.pickedgroup['linehl'].' texthl='.pickedgroup['charhl']
-        let sign_id = s:make_signid(1,crrbufnr, pickedmark.pos[1])
-        "let s:count_sign += 1
-        exe 'sign place '.sign_id.' line='.pickedmark['pos'][1].' name='.pickedmark['group'].' file='.pickedmark['path']
-      endif
+      exe 'sign define '.pickedgroup['name'].' text='.pickedgroup['char'].' linehl='.pickedgroup['linehl'].' texthl='.pickedgroup['charhl']
+      let sign_id = altmarks_port#make_signid(1,crrbufnr, pickedmark.pos[1])
+      "let s:count_sign += 1
+      exe 'sign place '.sign_id.' line='.pickedmark['pos'][1].' name='.pickedmark['group'].' file='.pickedmark['path']
     endfor
   endfor
   call altmarks_port#def_signhl()
 endfunction "}}}
-
-function! s:Changedtick() "{{{
-  if my_changedtick != b:changedtick
-    let my_changedtick = b:changedtick
-    call My_Update()
-  endif
-endfunction "}}}
-
-function! s:Updatealtmarks() "{{{
+function! s:updatealtmarks() "{{{
   let tmp = readfile(s:altmarks_dir.'altmarks')
   let s:markslist = map(tmp, 'eval(v:val)')
 endfunction "}}}
-
-function! s:Write_markfile() "{{{
+function! s:write_markfile() "{{{
+  for picked in s:markslist
+    if bufloaded(picked.path)
+      let correctlnum_newid = s:registeredlnum2correctlnum(picked.pos[1], bufnr(picked.path))
+      if correctlnum_newid[0] != picked.pos[1] "DebugLog: pickedではなくs:markslist[s:markslistpoi]を使っていたのを修正
+        let picked.pos[1] = correctlnum_newid[0]
+      endif
+    endif
+  endfor
   let tmp = map(copy(s:markslist), 'string(v:val)')
   if len(tmp)
     if !isdirectory(s:altmarks_dir)
@@ -120,6 +129,7 @@ function! s:on_cursor_moved() "{{{
 endfunction "}}}
 
 "Mappings "{{{
+noremap <silent> <Plug>(altmarks-groups-menu) :<C-u>call <SID>GroupsMenu(0)<CR>
 noremap <silent> <Plug>(altmarks-marking) :<C-u>call <SID>Registermarks(0)<CR>
 noremap <silent> <Plug>(altmarks-input) :<C-u>call <SID>Registermarks(1)<CR>
 noremap <silent> <Plug>(altmarks-append) :<C-u>call <SID>Registermarks(2)<CR>
@@ -152,26 +162,26 @@ endif
 if !hasmapto('<Plug>(altmarks-append)')
   nmap ma <Plug>(altmarks-append)
 endif
-if !hasmapto('<Plug>(altmarks-delete)')
-  nmap md <Plug>(altmarks-delete)
-endif
-if !hasmapto('<Plug>(altmarks-remove-plus)')
-  nmap m- <Plug>(altmarks-remove-plus)
-endif
 if !hasmapto('<Plug>(altmarks-next)')
   nmap mj <Plug>(altmarks-next)
 endif
 if !hasmapto('<Plug>(altmarks-prev)')
   nmap mk <Plug>(altmarks-prev)
 endif
+if !hasmapto('<Plug>(altmarks-delete)')
+  nmap md <Plug>(altmarks-delete)
+endif
 if !hasmapto('<Plug>(altmarks-status)')
   nmap ms <Plug>(altmarks-status)
 endif
-if !hasmapto('<Plug>(altmarks-onetime)')
-  nmap mo <Plug>(altmarks-onetime)
-endif
 if !hasmapto('<Plug>(altmarks-clear)')
   nmap mc <Plug>(altmarks-clear)
+endif
+if !hasmapto('<Plug>(altmarks-groups-menu)')
+  nmap mg <Plug>(altmarks-groups-menu)
+endif
+if !hasmapto('<Plug>(altmarks-onetime)')
+  nmap mo <Plug>(altmarks-onetime)
 endif
 if !exists('g:disable_group_number_mapping')
   nmap m1 <Plug>(altmarks-group-shift1)
@@ -199,13 +209,26 @@ endif
 if !hasmapto('<Plug>(altmarks-protect)')
   nmap mp <Plug>(altmarks-protect)
 endif
+if !hasmapto('<Plug>(altmarks-remove-plus)')
+  nmap m- <Plug>(altmarks-remove-plus)
+endif
 
 
-function! s:make_signid(head,bufnr,lnum) "{{{
-  return printf('%d%0.3d%0.5d', a:head, a:bufnr, a:lnum)
+function! s:shiftgroup(crrlnum,crrbufnr) "{{{
+  let [registeredlnum, newlnum] = s:lnum_s_sign2registeredlnum(a:crrlnum, a:crrbufnr)
+  let idx = s:mlpoi_whether_arglnummarked(registeredlnum)
+  let s:markslistpoi = idx
+  if newlnum != 0
+    let s:markslist[idx].pos[1] = newlnum
+  endif
+
+  let sign_id = altmarks_port#make_signid(1, a:crrbufnr, s:markslist[idx].pos[1])
+  exe 'sign unplace '.sign_id
+
+  let s:markslist[idx].group = g:markgroups[s:grouppoi].name
+  exe 'sign define '.g:markgroups[s:grouppoi]['name'].' text='.g:markgroups[s:grouppoi]['char'].' linehl='.g:markgroups[s:grouppoi]['linehl'].' texthl='.g:markgroups[s:grouppoi]['charhl']
+  exe 'sign place '.sign_id.' line='.s:markslist[idx]['pos'][1].' name='.s:markslist[idx]['group'].' file='.s:markslist[idx]['path']
 endfunction "}}}
-
-
 function! s:make_navi(Groupname, Markslistend) "{{{
   let groupname = a:Groupname == '' ? g:markgroups[s:grouppoi].name : a:Groupname
   let markslistend = a:Markslistend == -1 ? len(s:markslist)-1 : a:Markslistend
@@ -223,24 +246,86 @@ function! s:make_navi(Groupname, Markslistend) "{{{
 endfunction "}}}
 function! s:sign_unplace(groupname_in_marklist) "{{{
   for pickedgroup in g:markgroups
-    if pickedgroup.name == a:groupname_in_marklist && pickedgroup.enablesign == 1
+    "if pickedgroup.name == a:groupname_in_marklist && pickedgroup.enablesign == 1
+    if pickedgroup.name == a:groupname_in_marklist
       sign unplace
     endif
   endfor
 endfunction "}}}
+function! s:chkandfix_markgap() "{{{
+  silent let lnum_ids = lclib#{g:altmarks_lclib}#lnum_id_of_sign(0)
+endfunction "}}}
+"a:lnumにsignがあるなら、signIDから登録時の行番号を割り出す。
+"登録時の行番と現在行sign行番が食い違っていたらsignIDを更新するが、s:markslist登録行数は修正しないので外部で "返値[1]!=0" の時を検出して修正しなければいけない。
+"a:bufnrが0だと全てのバッファのsignから現在行のsignを探す
+function! s:lnum_s_sign2registeredlnum(lnum, bufnr) "{{{
+  silent let signs = lclib#{g:altmarks_lclib}#lnum_id_of_sign(a:bufnr)
+  for picked in signs
+    if picked[0] != a:lnum
+      continue
+    endif
+    let registeredlnum = str2nr(matchstr(picked[1], '\d\{4}\zs\d\{5}'))
+    let correctlnum = 0
+    if registeredlnum != picked[0]
+      let correctlnum = picked[0]
+      exe 'sign unplace '.picked[1]
+      exe 'sign place '.altmarks_port#make_signid(1,a:bufnr,a:lnum).' line='.a:lnum.' name='.picked[2].' buffer='.a:bufnr
+    endif
+    return [registeredlnum, correctlnum]
+  endfor
+  echoerr 'AltMarks: not found'
+  return [0]
+endfunction "}}}
+"行番・バッファ番を元にsignIDを生成しそれを元に現在の正しいlnumを返す。signID更新
+"lnum_sとの違い→lnum_sはsignの行番からサーチする（signをregisteredに変換する。）
+"registeredlnum2はsignのIDから正しい行番をサーチする（registeredをsignに変換する）。
+function! s:registeredlnum2correctlnum(lnum, bufnr) "{{{
+  silent let signs = lclib#{g:altmarks_lclib}#lnum_id_of_sign(a:bufnr)
+  let id = altmarks_port#make_signid(1, a:bufnr, a:lnum)
+  for picked in signs
+    if picked[1] != id
+      continue
+    endif
+    let new_signID = picked[1]
+    if a:lnum != picked[0]
+      let lnumaftermoved = picked[0]
+      exe 'sign unplace '.picked[1]
+      let new_signID = altmarks_port#make_signid(1,a:bufnr,picked[0])
+      exe 'sign place '.new_signID.' line='.picked[0].' name='.picked[2].' buffer='.a:bufnr
+    endif
+    return [picked[0], new_signID]
+  endfor
+  echoerr 'AltMarks: this buffer is not signed.'
+endfunction "}}}
+function! s:wRap_reged2jump(regedlnum, regedbufnr) "{{{
+  let correctlnum_newid = s:registeredlnum2correctlnum(a:regedlnum, a:regedbufnr)
+  if correctlnum_newid[0] != s:markslist[s:markslistpoi].pos[1]
+    let s:markslist[s:markslistpoi].pos[1] = correctlnum_newid[0]
+  endif
 
-
-
-function! s:Cycle_group(ascending) "{{{
-  let s:chk_continue = 'cycle_group'
-  let markgroupsend = len(g:markgroups)-1
-  let s:grouppoi = altmarks_port#cycle_poi(a:ascending, s:grouppoi, markgroupsend)
-  let navi = s:make_navi('', -1)
-  redraw|echo ''
-  echo 'AltMarks: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
+  if s:crrpath != s:markslist[s:markslistpoi]['path']
+    silent exe 'edit '.s:markslist[s:markslistpoi]['path']
+  endif
+  call setpos('.', s:markslist[s:markslistpoi]['pos'])
+  "silent exe 'sign jump '.correctlnum_newid[1].' file='.s:markslist[s:markslistpoi]['path']
+endfunction "}}}
+"(現在バッファの)引数行がマークとして登録されているか調べる。登録されているのならs:markslistの該当idxを返す
+function! s:mlpoi_whether_arglnummarked(comparison_lnum) "{{{
+  for picked in s:markslist
+    if picked['path'] != s:crrpath
+      continue
+    endif
+    "if picked['pos'][1] == line('.') || picked['pos'][1] >= line('$')
+    if picked['pos'][1] == a:comparison_lnum
+      return index(s:markslist, picked)
+    endif
+  endfor
+  echoerr 'AltMarks: not found'
+  return -1
 endfunction "}}}
 
 
+"m1-m9
 function! s:Groupshift(idxnum) "{{{
   let s:chk_continue = 'groupshift'
   let markgroupsend = len(g:markgroups)-1
@@ -250,14 +335,7 @@ function! s:Groupshift(idxnum) "{{{
   redraw|echo ''
   echo 'AltMarks: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
 endfunction "}}}
-
-
-function! s:MakeGroup() "{{{
-  let s:chk_continue = 'makegroup'
-  
-endfunction "}}}
-
-
+"mo
 function! s:Putonetime() "{{{
   if s:chk_continue == 'putonetime'
   endif
@@ -272,8 +350,7 @@ function! s:Putonetime() "{{{
   let s:count_sign += 1
   exe 'sign place '. s:count_sign .' line='.crrinfo['pos'][1].' name=altmarks_onetime file='.crrinfo['path']
 endfunction "}}}
-
-
+"mc
 function! s:Clearmarks() "{{{
   let s:chk_continue = 'clearmarks'
   let input = input("AltMarks: Now ".len(s:markslist)." marks. Which marks do you want to clear?(a/b/c/d)\na:No protected marks (in this buffer)\nb:No protected marks (in all buffer)\nc:All marks (in this buffer)\nd:All marks (in all buffer)\n" )
@@ -311,8 +388,7 @@ function! s:Clearmarks() "{{{
     echo 'AltMarks: Now '.len(s:markslist).' marks.'
   endif
 endfunction "}}}
-
-
+"me
 function! s:Editmarksfile() "{{{
   let s:chk_continue = 'editmarksfile'
   let tmp = map(copy(s:markslist), 'string(v:val)')
@@ -326,48 +402,43 @@ function! s:Editmarksfile() "{{{
   endif
   exe 'split '.s:altmarks_dir.'altmarks'
 endfunction "}}}
-
-
+"md ms
 function! s:Handlemark(command) "{{{
   let s:chk_continue = 'handlemark'
   let target = ''
   let attatch = ''
-  for picked in s:markslist
-    if picked['path'] != s:crrpath
-      continue
-    endif
-    if picked['pos'][1] == line('.') || picked['pos'][1] >= line('$')
-      let s:markslistpoi = index(s:markslist, picked)
-      if a:command == 'Delete'
-        let groupname = s:markslist[s:markslistpoi].group
-        exe 'sign unplace '.s:make_signid(1, bufnr('%'), picked['pos'][1])
-        call remove(s:markslist, s:markslistpoi)
-        let target .= picked['protect'].'['.picked['group'].'] "'.picked['ctx'].'" '
-      elseif a:command == 'Status'
-        let groupname = s:markslist[s:markslistpoi].group
-        let target .= picked['protect'].'['.picked['group'].'] "'.picked['ctx'].'" '
-        let attatch .= picked['attatch'].'  '
-      elseif a:command == 'Remove plus'
-        let picked['plus'] = ' '
-        let target .= picked['protect'].'"'.picked['ctx'].'" '
-      elseif a:command == 'Protect'
-        let picked['protect'] = picked['protect'] == '' ? '[*]' : ''
-        let target .= picked['protect'].'"'.picked['ctx'].'" '
-      endif
-    endif
-  endfor
-  redraw|echo ''
-  if target == ''
-    echo 'AltMarks: Such mark is not found.'
-  else
-    "let navi = '('.s:markslistpoi.'/'.len(s:markslist).')'
-    let navi = s:make_navi(groupname,-1)
+  let crrbufnr = bufnr('%')
+  try
+    let registeredlnum_newlnum = s:lnum_s_sign2registeredlnum(line('.'), crrbufnr)
+    let idx = s:mlpoi_whether_arglnummarked(registeredlnum_newlnum[0])
+  catch /AltMarks:.*/
+    let navi = s:make_navi('',-1)
     redraw|echo ''
-    echo 'AltMarks'.a:command.': '.target.navi.attatch
+    echo 'AltMarks: Such mark is not found. ['.g:markgroups[s:grouppoi]['name'].'] '.navi
+    return
+  endtry
+  let s:markslistpoi = idx
+  let elements = s:markslist[s:markslistpoi]
+  if registeredlnum_newlnum[1] != 0
+    let elements.pos[1] = registeredlnum_newlnum[1]
   endif
+  if a:command == 'Delete'
+    let groupname = elements.group
+    exe 'sign unplace '.altmarks_port#make_signid(1, crrbufnr, elements.pos[1])
+    call remove(s:markslist, s:markslistpoi)
+    let target .= elements['protect'].'['.elements['group'].'] "'.elements['ctx'].'" '
+  elseif a:command == 'Status'
+    let groupname = elements.group
+    let target .= elements['protect'].'['.elements['group'].'] "'.elements['ctx'].'" '
+    let attatch .= elements['attatch'].'  '
+  endif
+  redraw|echo ''
+  "let navi = '('.s:markslistpoi.'/'.len(s:markslist).')'
+  let navi = s:make_navi(groupname,-1)
+  redraw|echo ''
+  echo 'AltMarks'.a:command.': '.target.navi.attatch
 endfunction "}}}
-
-
+"mm mi ma
 function! s:Registermarks(attatch) "{{{
   let s:chk_continue = 'registermarks'
   let crrinfo = altmarks_port#makecrrinfo(a:attatch)
@@ -376,7 +447,7 @@ function! s:Registermarks(attatch) "{{{
   endif
   let crrinfo.group = g:markgroups[s:grouppoi].name
 
-  for picked in s:markslist "すでに登録されているmarkなら更新 CATALOGED2
+  for picked in s:markslist "すでに登録されているmarkなら更新
     if [picked['path'],picked['pos'][1]] == [crrinfo['path'],crrinfo['pos'][1]]
       if a:attatch == 1
         let crrinfo['attatch'] = attatch
@@ -385,19 +456,19 @@ function! s:Registermarks(attatch) "{{{
       else
         let crrinfo['attatch'] = picked['attatch']
       endif
-      exe 'sign unplace '.s:make_signid(1,bufnr('%'),picked.pos[1])
+      exe 'sign unplace '.altmarks_port#make_signid(1,bufnr('%'),picked.pos[1])
       call remove(s:markslist, index(s:markslist, picked))
     endif
   endfor
 
-  if g:markgroups[s:grouppoi].enablesign
-    let crrbufnr = bufnr('%')
-    exe 'sign define '.g:markgroups[s:grouppoi]['name'].' text='.g:markgroups[s:grouppoi]['char'].' linehl='.g:markgroups[s:grouppoi]['linehl'].' texthl='.g:markgroups[s:grouppoi]['charhl']
-    "let s:count_sign += 1
-    let sign_id = s:make_signid(1,crrbufnr, crrinfo.pos[1])
-    exe 'sign place '.sign_id.' line='.crrinfo['pos'][1].' name='.crrinfo['group'].' file='.crrinfo['path']
-    call altmarks_port#def_signhl()
-  endif
+  "if g:markgroups[s:grouppoi].enablesign
+  let crrbufnr = bufnr('%')
+  exe 'sign define '.g:markgroups[s:grouppoi]['name'].' text='.g:markgroups[s:grouppoi]['char'].' linehl='.g:markgroups[s:grouppoi]['linehl'].' texthl='.g:markgroups[s:grouppoi]['charhl']
+  "let s:count_sign += 1
+  let sign_id = altmarks_port#make_signid(1,crrbufnr, crrinfo.pos[1])
+  exe 'sign place '.sign_id.' line='.crrinfo['pos'][1].' name='.crrinfo['group'].' file='.crrinfo['path']
+  call altmarks_port#def_signhl()
+  "endif
 
   call add(s:markslist, crrinfo)
   let markslistend = len(s:markslist)-1
@@ -412,14 +483,13 @@ function! s:show_registered(markslistend, crrentinfo)  "{{{1
         \a:crrentinfo['protect'], a:crrentinfo['group'], a:crrentinfo['ctx'],
         \navi, a:crrentinfo['attatch'])
 endfunction "}}}1
-
-
-
+"mj mk
 function! s:Cycle_marks(ascending) "{{{
   let s:chk_continue = 'cyclemarks'
   if empty(s:markslist)
+    let navi = s:make_navi('',-1)
     redraw|echo ''
-    echo 'AltMarks: No marks is setted.'
+    echo 'AltMarks: No marks is setted. ['.g:markgroups[s:grouppoi]['name'].'] '.navi
     return
   endif
 
@@ -442,22 +512,40 @@ function! s:Cycle_marks(ascending) "{{{
 
   "let crrpath = expand('%:p')
   let crrpos = getpos('.')
+  let crrbufnr = bufnr('%')
 
-  let return = altmarks_port#replay_mark(s:crrpath,crrpos, s:markslist[s:markslistpoi]['path'], s:markslist[s:markslistpoi]['pos'])
+  if bufloaded(s:markslist[s:markslistpoi].path)
+    let return = 0
+    try
+      let registeredlnum_newlnum = s:lnum_s_sign2registeredlnum(crrpos[1], crrbufnr) "現在行hit_or_not
+    catch /AltMarks:.*/
+      let return = 2
+    endtry
+  else
+    let return = altmarks_port#replay_mark(s:crrpath,crrpos, s:markslist[s:markslistpoi].path, s:markslist[s:markslistpoi].pos)
+  endif
+
+  if return == 2 "カーソルドがマーク行にないとき{{{
+    call s:wRap_reged2jump(s:markslist[s:markslistpoi].pos[1], bufnr(s:markslist[s:markslistpoi].path))
+    let return = 1
+  endif
   if return
     call s:show_cycling(markslistend)
     return
-  endif
+  endif "}}}
 
 
-  let s:markslistpoi = altmarks_port#cycle_poi(a:ascending, s:markslistpoi, markslistend)
+  let s:markslistpoi = lclib#{g:altmarks_lclib}#cycle_poi(a:ascending, s:markslistpoi, markslistend)
   let s:markslistpoi = s:cycle_poi_in_group(a:ascending)
 
-  "let s:markslistpoi = altmarks_port#cycle_poi(a:ascending, s:markslistpoi, markslistend)
-  call altmarks_port#replay_mark(s:crrpath,crrpos, s:markslist[s:markslistpoi]['path'], s:markslist[s:markslistpoi]['pos'])
+  if bufloaded(s:markslist[s:markslistpoi].path)
+    call s:wRap_reged2jump(s:markslist[s:markslistpoi].pos[1], bufnr(s:markslist[s:markslistpoi].path))
+  else
+    call altmarks_port#replay_mark(s:crrpath,crrpos, s:markslist[s:markslistpoi]['path'], s:markslist[s:markslistpoi]['pos'])
+  endif
+
   call s:show_cycling(markslistend)
 endfunction "}}}
-
 "idxポインタをグループ内の次のmarkまでサイクルさせる（末尾でループ）
 function! s:cycle_poi_in_group(ascending) "{{{
   let markslistend = len(s:markslist)-1
@@ -475,7 +563,6 @@ function! s:cycle_poi_in_group(ascending) "{{{
   endif
   return newpoi
 endfunction "}}}
-
 function! s:nextpoi_in_group(ascending,start,stop,crrgroupname) "{{{
   let listpeace = s:markslist[(a:start):(a:stop)]
   if a:ascending
@@ -496,21 +583,98 @@ function! s:show_cycling(markslistend) "{{{
         \s:markslist[s:markslistpoi]['protect'], s:markslist[s:markslistpoi]['group'], s:markslist[s:markslistpoi]['ctx'],
         \navi, s:markslist[s:markslistpoi]['attatch'])
 endfunction "}}}
+"mg
+function! s:GroupsMenu(shift) "{{{
+  let s:chk_continue = 'groupsmenu'
+  let markslistend = len(s:markslist)-1
+  let markgroupsend = len(g:markgroups)-1
+
+  let shift = a:shift ? 1 : 0
+  let narrowedgroups = copy(g:markgroups)
+  while len(narrowedgroups) > 1
+    let menutext = ''
+    let i = 1
+    for picked in narrowedgroups
+      let navi = substitute(s:make_navi(picked.name, markslistend), '(TTL:\d\+)', '','g')
+      let menutext .= "(".i."): [".picked['name']."] ".navi."\n"
+      let i +=1
+    endfor
+
+    let input = input("AltMarksGroupsMenu: [".g:markgroups[s:grouppoi]['name']."] (TTL:".(markslistend+1).")\n".menutext)
+    if input == ''
+      return
+    endif
+    if input =~ '\d\+'
+      let idx = matchstr(input, '\d\+')-1
+      let idx = idx>markgroupsend ? markgroupsend :idx
+      let narrowedgroups = [remove(narrowedgroups, idx)]
+    else
+      if input =~ g:altmarks_shiftgroup_pat
+        let input = substitute(input, g:altmarks_shiftgroup_pat, '', 'g')
+        let shift = 1
+      endif
+      let input = substitute(substitute(input,'\s','\\\&.*','g'),'^','.*','g')
+
+      call filter(narrowedgroups, 'v:val.name =~'''.input.'''')
+    endif
+    redraw|echo ''
+  endwhile
+  if !empty(narrowedgroups)
+    let s:grouppoi = index(g:markgroups, narrowedgroups[0])
+  endif
+
+  let crrbufnr = bufnr('%')
+  let crrlnum = line('.')
+  try
+    redraw|echo ''
+    if shift
+      call s:shiftgroup(crrlnum,crrbufnr)
+    endif
+  catch /AltMarks:.*/
+    echo 'Here is no mark.'
+  endtry
+
+  let navi = s:make_navi('', markslistend)
+  echo 'AltMarks: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
+endfunction "}}}
+"mh ml
+function! s:Cycle_group(ascending) "{{{
+  let s:chk_continue = 'cycle_group'
+  let markgroupsend = len(g:markgroups)-1
+  let s:grouppoi = lclib#{g:altmarks_lclib}#cycle_poi(a:ascending, s:grouppoi, markgroupsend)
+
+  let crrlnum = line('.')
+  let crrbufnr = bufnr('%')
+  try
+    call s:shiftgroup(crrlnum,crrbufnr)
+  catch /AltMarks:.*/
+  endtry
+
+  redraw|echo ''
+  let navi = s:make_navi('', -1)
+  echo 'AltMarks: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
+endfunction "}}}
+
+
+let &cpo = save_cpo
 
 
 
-"CATALOG:
-"すでに登録されているmarkなら更新 CATALOGED2
+
 
 
 "TODO
+"mn mp グループを無視して全てのmarkをサイクルさせる
+"mb mf 現在バッファ内に限定する／限定解除する
+"mc
+"limit属性 この数以上のマークは存在できない。越えたときは古いマークが削除
+"mmの二度目の連打でHEAD^のマークへジャンプ
 "添付メッセージをgrep
 "unite表示
-"sign id振り方を変更
-"mh mlの挙動をやっぱりグループその場で変更にする
-"ふせん。コメント。マーキング。グループ管理。テスト部分の記述に分かるようにsignできる。
+"グループサイクル方式でなく直接グループを指定してマークする各コマンド（commandにする？）
 "mu でアップデート（posの変更
-"スクリプト中で重要だと思われる部分に付ける印
-"issue: crrgroup Defの状態で他のを削除したらsignが解除されない
-"スイッチしたときそのグループの含むマーク数を表示
 "現在のg:markgroupsに含まれていないs:markslist候補のグループの所属を起動時にDefaultやOtherに自動変更
+"ビジュアル選択行を一気にsignする
+
+"
+"案:プラグインネーム変更　デバッグのサインツールだから…？signage.vim?
