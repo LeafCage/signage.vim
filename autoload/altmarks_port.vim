@@ -1,16 +1,16 @@
 
 
 "マーク(crrinfo)の作成
-function! altmarks_port#makecrrinfo(attatch) "{{{
-  let attatch = ''
-  if a:attatch "コメント付きでマークするとき
-    if a:attatch = 1
-      let attatch = input('AltMarksInput: ')
+function! altmarks_port#makecrrinfo(attach) "{{{
+  let attach = ''
+  if a:attach "コメント付きでマークするとき
+    if a:attach == 1
+      let attach = input('AltMarksInput: ')
     else
-      let attatch = input('AltMarksAppend: ')
+      let attach = input('AltMarksAppend: ')
     endif
-    if attatch != ''
-      "let attatch = "\n".attatch
+    if attach != ''
+      "let attach = "\n".attach
     else
       return {}
     endif
@@ -26,8 +26,7 @@ function! altmarks_port#makecrrinfo(attatch) "{{{
         \ 'path':crrpath,
         \ 'pos':getpos('.'),
         \ 'ctx':altmarks_port#Get_ctx(),
-        \ 'attatch':attatch,
-        \ 'protect': '',
+        \ 'attach':attach,
         \ }
   return crrinfo
 endfunction "}}}
@@ -35,7 +34,7 @@ endfunction "}}}
 function! altmarks_port#Get_ctx()  "{{{1
   let col = col('.')
   let start = col-30 < 0 ? 0 :col-20
-  return lclib#{g:altmarks_lclib}#rm_multibyte_garbage(getline('.')[(start):col+30])
+  return lclib#rm_multibyte_garbage(getline('.')[(start):col+30])
 endfun "}}}1
 "path posが現在地と新しい情報で食い違っていたら新しいposにカーソルセットしてreturn=1を返す
 function! altmarks_port#replay_mark(crrpath,crrpos,newpath,newpos) "{{{1
@@ -70,9 +69,6 @@ function! altmarks_port#def_signhl() "{{{
   hi texthl_purple gui=bold guifg=white guibg=purple
   hi texthl_gray gui=bold guifg=white guibg=gray30
   hi texthl_orange gui=bold guifg=blue guibg=orange
-endfunction "}}}
-"idxポインタを次のグループまでサイクルさせる（末尾でループ）
-function! altmarks_port#cycle_pointer_in_group() "{{{
 endfunction "}}}
 "signIDを100300254のように生成(head,バッファ番,行番)
 function! altmarks_port#make_signid(head,bufnr,lnum) "{{{
