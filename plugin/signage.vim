@@ -45,6 +45,7 @@ augroup signage
   au!
   au BufRead * call <SID>restore_sign()
   au BufEnter * let s:crrpath = expand('%:p')
+  au BufEnter signage setl tw=0
   au BufWritePost signage call <SID>updatesignagefile()
   au VimLeavePre * call <SID>write_markfile()
 augroup END
@@ -207,6 +208,7 @@ function! s:make_signage_file() "{{{
   else
     call delete(s:signage_dir.'signage')
   endif
+  bd!
 endfunction "}}}
 function! s:cHk_allmarks_correctness() "{{{
   for picked in s:markslist
