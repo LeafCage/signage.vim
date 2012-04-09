@@ -1,6 +1,8 @@
 *signage.jax*	signの使いやすいインターフェイスを提供する。
 ==============================================================================
-暫定版ヘルプドキュメント
+ Author:	LeafCage <leafcage+vim@gmail.com>
+ License:	Creative Commons 2.1 Japanese
+		<http://creativecommons.org/licenses/by/2.1/jp/>
 ==============================================================================
 CONTENTS					*signage-contents*
 
@@ -12,6 +14,7 @@ CONTENTS					*signage-contents*
   キーバインド			|signage-keybind|
   unite.vim			|signage-unite|
 補足説明			|signage-supplementary|
+注意				|signage-attention|
 仕様・不具合			|signage-specification|
 
 ==============================================================================
@@ -204,7 +207,6 @@ https://github.com/Shougo/unite.vim
 	|<Plug>(signage-groups-menu)|と違って|g:signage_shiftgroup_pat|が入力
 	されたかどうかに関係なくカーソル位置のマークのグループ所属を変更する。
 
-
 <Plug>(signage-clear)				*<Plug>(signage-clear)*
 (規定: nmap mc)
 	マーク削除メニューを出す。(a/b/c/d)から選択する。
@@ -219,8 +221,10 @@ https://github.com/Shougo/unite.vim
 	|signage-file|を:writeすると全てのマークが更新される。
 	コマンド|:SignageEditfile|と同じ。
 
+
 unite.vim						*signage-unite*
 ---------
+
 :Unite signage					*unite-signage*
 	全てのマークの一覧メニューを出す。選択してジャンプすることが出来る。
 	残念ながらdelete機能などは付けていない。
@@ -272,6 +276,37 @@ signage-file					*signage-file*
 
 
 ==============================================================================
+注意						*signage-attention*
+
+以下の状況になると不具合が発生するかもしれない。
+
+ ・現在バッファの最終行をオーバーした行番にマークが置かれる状況になったとき
+	これは例えば次のような原因で起きる
+	 ・|signage-file|を編集してオーバーした行番を指定した
+	 ・ファイルを外部で編集してマーク時よりも行数を減らした
+	この不具合発生の解消手段を現時点で用意していない。
+	|:SignageFixInvalidGroups|などで各人手動で解決するしかない。
+
+ ・あるグループのマークが存在する状態で|g:markgroups|からそのグループを削除し
+	た。またはグループ名を変更した。この場合、以前から存在しているマークが
+	取り残されてしまうので、|:SignageFixInvalidGroups|か|:SignageEditfile|
+	で以前から存在しているマークのグループを変更することで解決できる
+
+ ・signageが設置したsignを:sign unplaceで削除したとき
+	signageはsignを目当てに動作するのでマークに対応するsignがないとエラー
+	を吐く。|:SignageEditfile|などで|signage-file|を書き込みしたとき、sign
+	が再構築されるので、今のところはそれで解消するしかない
+
+ ・同じ行に2つ以上のマークが存在するとき
+	signageは同一行にマークが存在しないように、もしマークが被った場合は後
+	のマークの方を優先するように調整するが、その調整をかいくぐって2つ以上
+	のマークがあると不具合が発生する。|:SignageEditfile|で手動で是正するこ
+	とで解消できる
+
+ ・他のsign系プラグインを併用したとき
+	他のsign系プラグインのsign操作が上記の不具合を発生させるかもしれない
+
+==============================================================================
 仕様・不具合					*signage-specification*
 
  ・ホームディレクトリ（デフォルト）に設定ファイル・ディレクトリを作成する。
@@ -279,9 +314,9 @@ signage-file					*signage-file*
 	マークの記録は失われてしまう。
  ・signageのマークはヤンクやデリートなどのオペレータとして使えない。
  ・デフォルトキーバインドはマークバインドを潰してしまう。
- ★無名バッファにマークできない。
+ ・無名バッファにマークできない。
  ・ヘルプファイルへのマークは動作保証外。
- ★同じ行に複数マークできない。もし同じ行に複数マークがある場合、古い方は
+ ・同じ行に複数マークできない。もし同じ行に複数マークがある場合、古い方は
 	削除される。さもなくば不具合を起こす。
  ・signの識別子(id)は100700325のような形式である。これは、初めの1が固定で、
 	次の3桁がバッファ番号、最後の5桁が行番号である。

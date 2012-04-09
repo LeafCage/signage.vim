@@ -24,6 +24,7 @@ g:disable_defa_binds	signage.jax	/*g:disable_defa_binds*
 g:markgroups	signage.jax	/*g:markgroups*
 g:signage_dir	signage.jax	/*g:signage_dir*
 g:signage_shiftgroup_pat	signage.jax	/*g:signage_shiftgroup_pat*
+signage-attention	signage.jax	/*signage-attention*
 signage-commands	signage.jax	/*signage-commands*
 signage-contents	signage.jax	/*signage-contents*
 signage-file	signage.jax	/*signage-file*

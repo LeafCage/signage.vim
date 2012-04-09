@@ -59,7 +59,11 @@ endfunction "}}}
 function! s:updatesignagefile() "{{{
   let tmp = readfile(s:signage_dir.'signage')
   let s:markslist = map(tmp, 'eval(v:val)')
-  sign unplace *
+  silent for picked in lclib#lnum_id_of_sign(0)
+    if picked[1] =~ '\d\{9}'
+      exe 'sign unplace '.picked[1]
+    endif
+  endfor
   call s:optimize_sign(1,'')
 endfunction "}}}
 function! s:write_markfile() "{{{
@@ -95,7 +99,7 @@ noremap <silent> <Plug>(signage-edit) :<C-u>call <SID>Editmarksfile()<CR>
 noremap <silent> <Plug>(signage-clear) :<C-u>call <SID>Clearmarks()<CR>
 "noremap <silent> <Plug>(signage-onetime) :<C-u>call <SID>Putonetime()<CR>
 noremap <silent> <Plug>(signage-toggle-crrbuf-only) :<C-u>call <SID>Crrbuf_only()<CR>
-if get(g:,'disable_defa_binds')
+if !get(g:,'disable_defa_binds')
   if !hasmapto('<Plug>(signage-marking)')
     nmap mm <Plug>(signage-marking)
   endif
@@ -247,14 +251,6 @@ function! s:make_navi(Groupname, Markslistend) "{{{
     endif
   endfor
   return '('.num_inthegroup.'/'.groupcontents.')(TTL:'.(markslistend+1).')'
-endfunction "}}}
-function! s:sign_unplace(groupname_in_marklist) "{{{
-  for pickedgroup in g:markgroups
-    "if pickedgroup.name == a:groupname_in_marklist && pickedgroup.enablesign == 1
-    if pickedgroup.name == a:groupname_in_marklist
-      sign unplace
-    endif
-  endfor
 endfunction "}}}
 function! s:chkandfix_markgap() "{{{
   silent let lnum_ids = lclib#lnum_id_of_sign(0)
