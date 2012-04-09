@@ -75,6 +75,9 @@ https://github.com/Shougo/unite.vim
  linehl		マークされた行全体がこのハイライトグループでハイライトされる
  charhl		横のカラムに表示される文字がこのハイライトグループでハイライト
 
+	signageはハイライトをsignage_port#def_signhl()で定義されているものを
+	使っている。要望があればハイライトを増やせる機構を導入する予定。
+
 
 |g:signage_shiftgroup_pat|			*g:signage_shiftgroup_pat*
 (文字列  規定値: '@')
@@ -263,6 +266,7 @@ mmでマークした時点での現在マークグループがそのマークの
 変更してみると、所属グループが'Changed'に変更され、signも >
  sign define Changed text=変 linehl=linehl_blue texthl=texthl_blue
 に変更される。
+signハイライトは標準でsignage_port#def_signhl()で定義されたものを使っている。
 
 現在マークグループを確認するにはマークのないところでデフォルトバインドmsで
 現在状態を確認すると良い。
