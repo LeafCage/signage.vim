@@ -32,6 +32,7 @@ signage-install	signage.jax	/*signage-install*
 signage-keybind	signage.jax	/*signage-keybind*
 signage-mark-attribute	signage.jax	/*signage-mark-attribute*
 signage-markgroups	signage.jax	/*signage-markgroups*
+signage-markstatus	signage.jax	/*signage-markstatus*
 signage-quicktutorial	signage.jax	/*signage-quicktutorial*
 signage-specification	signage.jax	/*signage-specification*
 signage-supplementary	signage.jax	/*signage-supplementary*
