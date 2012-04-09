@@ -131,6 +131,7 @@ https://github.com/Shougo/unite.vim
 (規定: nmap mm)
 	カーソル位置をマークする。すでにマークがある場合はマーク解除する。
 
+
 <Plug>(signage-input)				*<Plug>(signage-input)*
 (規定: nmap mi)
 	カーソル位置をマークし、コメントを付ける。
@@ -139,12 +140,14 @@ https://github.com/Shougo/unite.vim
 	すでにカーソル位置がマークがされている場合、新しくコメントを付ける。
 	その場合、古いコメントは削除される。
 
+
 <Plug>(signage-append)				*<Plug>(signage-append)*
 (規定: nmap ma)
 	|<Plug>(signage-input)|とほとんど同じ。だが、カーソル位置のマークに
 	すでにコメントが付けられている場合、|<Plug>(signage-input)|はコメント
 	を削除して上書きしたが、<Plug>(signage-append)は既存のコメントの後ろに
 	コメントを追加する。
+
 
 <Plug>(signage-delete)				*<Plug>(signage-delete)*
 (規定: nmap md)
@@ -153,30 +156,36 @@ https://github.com/Shougo/unite.vim
 	このプラグインの初期段階では|<Plug>(signage-marking)|に削除機能が
 	なかったその名残。
 
+
 <Plug>(signage-status)				*<Plug>(signage-status)*
 (規定: nmap ms)
 	カーソル位置のマークのステータスを表示する。
 	付加したコメントや、マーク当時のカーソル位置周辺文字列を表示する。
+
 
 <Plug>(signage-next)				*<Plug>(signage-next)*
 (規定: nmap mj)
 	現在マークグループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
+
 <Plug>(signage-prev)				*<Plug>(signage-prev)*
 (規定: nmap mk)
 	現在マークグループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
 
 <Plug>(signage-next-all)			*<Plug>(signage-next-all)*
 (規定: nmap mn)
 	全てのマークグループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
+
 <Plug>(signage-prev-all)			*<Plug>(signage-prev-all)*
 (規定: nmap mp)
 	全てのマークグループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
 
 <Plug>(signage-toggle-crrbuf-only)		*<Plug>(signage-toggle-crrbuf-only)*
 (規定: nmap mo)
@@ -186,15 +195,18 @@ https://github.com/Shougo/unite.vim
 	すでにsignが置かれているバッファでのみ効果がある。
 	crrbuf-only-modeになると、それを示すため左のsignカラムの色が変化する。
 
+
 <Plug>(signage-group-Lcycle)			*<Plug>(signage-group-Lcycle)*
 (規定: nmap mh)
 	現在マークグループを前のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
 
+
 <Plug>(signage-group-Rcycle)			*<Plug>(signage-group-Rcycle)*
 (規定: nmap ml)
 	現在マークグループを次のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
+
 
 <Plug>(signage-groups-menu)			*<Plug>(signage-groups-menu)*
 (規定: nmap mg)
@@ -204,11 +216,13 @@ https://github.com/Shougo/unite.vim
 	最初のメニューではグループ先頭文字を指定する。
 	それで一意に定まらないときの絞り込みメニューでは含む文字を指定する。
 
+
 <Plug>(signage-groups-menu-shift)		*<Plug>(signage-groups-menu-shift)*
 (規定: 未定義)
 	グループ切換メニューを出す。
 	|<Plug>(signage-groups-menu)|と違って|g:signage_shiftgroup_pat|が入力
 	されたかどうかに関係なくカーソル位置のマークのグループ所属を変更する。
+
 
 <Plug>(signage-clear)				*<Plug>(signage-clear)*
 (規定: nmap mc)
@@ -217,6 +231,7 @@ https://github.com/Shougo/unite.vim
 	(b):全てのグループのマークを、現在バッファから削除
 	(c):現在マークグループのマークを、全てのバッファから削除
 	(d):全てのマークを削除
+
 
 <Plug>(signage-edit)				*<Plug>(signage-edit)*
 (規定: nmap mq)
@@ -296,9 +311,10 @@ signage-file					*signage-file*
 	|:SignageFixInvalidGroups|などで各人手動で解決するしかない。
 
  ・あるグループのマークが存在する状態で|g:markgroups|からそのグループを削除し
-	た。またはグループ名を変更した。この場合、以前から存在しているマークが
-	取り残されてしまうので、|:SignageFixInvalidGroups|か|:SignageEditfile|
-	で以前から存在しているマークのグループを変更することで解決できる
+	たとき、またはグループ名を変更したとき
+	この場合、以前から存在しているマークが取り残されてしまうので、
+	|:SignageFixInvalidGroups|か|:SignageEditfile|で以前から存在している
+	マークのグループを変更することで解決できる
 
  ・signageが設置したsignを:sign unplaceで削除したとき
 	signageはsignを目当てに動作するのでマークに対応するsignがないとエラー
