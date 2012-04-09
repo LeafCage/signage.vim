@@ -208,7 +208,6 @@ function! s:make_signage_file() "{{{
   else
     call delete(s:signage_dir.'signage')
   endif
-  bd!
 endfunction "}}}
 function! s:cHk_allmarks_correctness() "{{{
   for picked in s:markslist
@@ -415,7 +414,11 @@ function! s:Editmarksfile() "{{{
   let s:chk_continue = 'editmarksfile'
   call s:cHk_allmarks_correctness()
   call s:make_signage_file()
-  exe 'split '.s:signage_dir.'signage'
+  let signagefile = s:signage_dir.'signage'
+  if bufloaded(signagefile)
+    silent exe 'bdelete! '.signagefile
+  endif
+  exe 'split '.signagefile
 endfunction "}}}
 "md ms
 function! s:Handlemark(command) "{{{
