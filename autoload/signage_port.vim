@@ -1,13 +1,13 @@
 
 
 "マーク(crrinfo)の作成
-function! altmarks_port#makecrrinfo(attach) "{{{
+function! signage_port#makecrrinfo(attach) "{{{
   let attach = ''
   if a:attach "コメント付きでマークするとき
     if a:attach == 1
-      let attach = input('AltMarksInput: ')
+      let attach = input('SignageInput: ')
     else
-      let attach = input('AltMarksAppend: ')
+      let attach = input('SignageAppend: ')
     endif
     if attach != ''
       "let attach = "\n".attach
@@ -18,26 +18,26 @@ function! altmarks_port#makecrrinfo(attach) "{{{
 
   let crrpath = expand('%:p')
   if crrpath == ''
-    echoerr 'AltMarks: No name buffer cannot mark.'
+    echoerr 'Signage: No name buffer cannot mark.'
     return {}
   endif
 
   let crrinfo = {
         \ 'path':crrpath,
         \ 'pos':getpos('.'),
-        \ 'ctx':altmarks_port#Get_ctx(),
+        \ 'ctx':signage_port#Get_ctx(),
         \ 'attach':attach,
         \ }
   return crrinfo
 endfunction "}}}
 "マーク当時の行の文字列を取り込む
-function! altmarks_port#Get_ctx()  "{{{1
+function! signage_port#Get_ctx()  "{{{1
   let col = col('.')
   let start = col-30 < 0 ? 0 :col-20
   return lclib#rm_multibyte_garbage(getline('.')[(start):col+30])
 endfun "}}}1
 "path posが現在地と新しい情報で食い違っていたら新しいposにカーソルセットしてreturn=1を返す
-function! altmarks_port#replay_mark(crrpath,crrpos,newpath,newpos) "{{{1
+function! signage_port#replay_mark(crrpath,crrpos,newpath,newpos) "{{{1
   let return = 0
   if a:crrpath != a:newpath
     silent exe 'edit '. a:newpath
@@ -51,16 +51,28 @@ function! altmarks_port#replay_mark(crrpath,crrpos,newpath,newpos) "{{{1
   return return
 endfunction "}}}1
 "signで使うhighlight定義
-function! altmarks_port#def_signhl() "{{{
-  hi linehl_red  guibg=firebrick4 ctermbg=darkred
-  hi linehl_green  guibg=darkslategray4 ctermbg=darkgreen
-  hi linehl_blue  guibg=royalblue4 ctermbg=blue
-  hi linehl_yellow  guibg=#888800 ctermbg=darkyellow
-  hi linehl_purple  guibg=darkmagenta ctermbg=darkmagenta
-  hi linehl_gray  guibg=dimgray ctermbg=gray
-  hi linehl_orange  guibg=indianred3 ctermbg=darkred
-  hi linehl_reverse  gui=reverse cterm=reverse
-  hi linehl_standout  gui=standout cterm=standout
+function! signage_port#def_signhl() "{{{
+  if &bg == 'dark'
+    hi linehl_red  guibg=firebrick4 ctermbg=darkred
+    hi linehl_green  guibg=darkslategray4 ctermbg=darkgreen
+    hi linehl_blue  guibg=royalblue4 ctermbg=blue
+    hi linehl_yellow  guibg=#888800 ctermbg=darkyellow
+    hi linehl_purple  guibg=darkmagenta ctermbg=darkmagenta
+    hi linehl_gray  guibg=dimgray ctermbg=gray
+    hi linehl_orange  guibg=indianred3 ctermbg=darkred
+    hi linehl_reverse  gui=reverse cterm=reverse
+    hi linehl_standout  gui=standout cterm=standout
+  else
+    hi linehl_red  guibg=crimson ctermbg=red
+    hi linehl_green  guibg=lime ctermbg=lightgreen
+    hi linehl_blue  guibg=royalblue ctermbg=lightblue
+    hi linehl_yellow  guibg=gold ctermbg=yellow
+    hi linehl_purple  guibg=orchid ctermbg=magenta
+    hi linehl_gray  guibg=silver ctermbg=gray
+    hi linehl_orange  guibg=darkorange ctermbg=darkred
+    hi linehl_reverse  gui=reverse cterm=reverse
+    hi linehl_standout  gui=standout cterm=standout
+  endif
 
   hi texthl_red gui=bold guifg=white guibg=red
   hi texthl_green gui=bold guifg=white guibg=green
@@ -71,7 +83,7 @@ function! altmarks_port#def_signhl() "{{{
   hi texthl_orange gui=bold guifg=blue guibg=orange
 endfunction "}}}
 "signIDを100300254のように生成(head,バッファ番,行番)
-function! altmarks_port#make_signid(head,bufnr,lnum) "{{{
+function! signage_port#make_signid(head,bufnr,lnum) "{{{
   return printf('%d%0.3d%0.5d', a:head, a:bufnr, a:lnum)
 endfunction "}}}
 

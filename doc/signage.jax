@@ -1,0 +1,310 @@
+*signage.jax*	signの使いやすいインターフェイスを提供する。
+==============================================================================
+暫定版ヘルプドキュメント
+==============================================================================
+CONTENTS					*signage-contents*
+
+簡単な説明			|signage-quicktutorial|
+インストール			|signage-install|
+グローバル変数			|signage-variables|
+操作体系
+  コマンド			|signage-commands|
+  キーバインド			|signage-keybind|
+  unite.vim			|signage-unite|
+補足説明			|signage-supplementary|
+仕様・不具合			|signage-specification|
+
+==============================================================================
+簡単な説明					*signage-quicktutorial*
+
+ （※デフォルトキーバインドで説明している）
+ ・mmで現在地を記録（マーク）する。マークされたところはsignされる。
+ ・すでにマークされているところにmmでマークの解除。
+ ・mj mk mn mpで過去のマークをブラウズする。
+ ・moでマークブラウズを現在バッファ内だけに限定する。
+ ・mh mlで現在地マークのマークグループ|signage-markgroups|所属を変更する。
+ ・mgで現在マークグループ変更メニューを出す。
+ ・mi maでコメント付きでマークする（miは新規・総書換／maは既存コメに追記）
+ ・mdで現在行のマークを削除する。
+ ・msで現在行のマークの詳細情報を表示。
+ ・mcで全てのマークを削除する。
+ ・mqでマークを記録しているファイルを編集する。:writeするとマーク更新される。
+
+==============================================================================
+インストール					*signage-install*
+
+このプラグインはコンパイル時に|+signs|機能を指定した場合のみに利用可能。
+配布ファイルをVimスクリプトのディレクトリへ置く。
+(普通は ~/.vim/ またはWindowsの場合、 $HOME/vimfiles)
+
+動作にlclibが必要。 https://github.com/LeafCage/lclib
+また、uniteインターフェイスを使うときにはunite.vimが必要。
+https://github.com/Shougo/unite.vim
+
+インストール後はグローバル変数|signage-variables|の設定をするとより快適に。
+
+==============================================================================
+グローバル変数					*signage-variables*
+
+|g:signage_dir|					*g:signage_dir*
+(文字列  規定値: '~/.signage/')
+	このディレクトリ以下にマーク保存ファイル|signage-file|を作成。
+
+
+|g:markgroups|					*g:markgroups*
+(リスト  既定値: 例に挙げたもの)
+	マークグループ|signage-markgroups|を例のように設定する。
+	signハイライトのさせ方をここで定義する。
+ 例： >
+ let g:markgroups = [
+   \{'name': 'Point', 'char': '点', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
+   \{'name': 'Changed', 'char': '変', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
+   \{'name': 'Advancing', 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
+   \{'name': 'Later', 'char': '後', 'linehl': 'linehl_orange', 'charhl': 'texthl_orange'},
+   \{'name': 'Issue', 'char': '問', 'linehl': 'linehl_red', 'charhl': 'texthl_red'},
+   \{'name': 'Delete', 'char': '削', 'linehl': 'linehl_purple', 'charhl': 'texthl_purple'},
+   \{'name': 'Note', 'char': '記', 'linehl': 'linehl_green', 'charhl': 'texthl_green'},
+   \]
+<
+ 要素(key)	説明~
+ name		グループ名
+ char		横のカラムに表示される文字。全角1文字半角2文字
+ linehl		マークされた行全体がこのハイライトグループでハイライトされる
+ charhl		横のカラムに表示される文字がこのハイライトグループでハイライト
+
+
+|g:signage_shiftgroup_pat|			*g:signage_shiftgroup_pat*
+(文字列  規定値: '@')
+	|<Plug>(signage-groups-menu)|で表示されるメニューにおいて、
+	g:signage_shiftgroup_patに含まれる文字を入力すると、カーソル位置の
+	マークの所属グループがそれに変更される。
+
+
+|g:disable_defa_binds|				*g:disable_defa_binds*
+(数値  既定値: 未定義)
+	1だと全てのデフォルトキーバインドが無効になる。
+	バインドを全て自分で定義したい人向けのオプション。
+
+
+|g:defa_grouppoi|				*g:defa_grouppoi*
+(数値  既定値: 未定義)
+	定義されていると起動時のs:grouppoiの値にこれが代入される。
+	例えばg:defa_grouppoi=0だと一番目のマークグループが規定になる。
+	g:defa_grouppoi=3だと四番目のマークグループが規定になる。
+
+==============================================================================
+操作体系
+
+コマンド					*signage-commands*
+--------
+
+:SignageSetmark [{groupname}]			*:SignageSetmark*
+	カーソル位置にマークをセットする。
+	{groupname}が指定されたときは設置されるマークのグループはそれになる。
+
+
+:SignageFixInvalidGroups			*:SignageFixInvalidGroups*
+	無効になっているグループ名を持つマークを発見・修正する。
+	すなわち|g:markgroups|にないグループのマークを見つける。
+	|g:markgroups|の既存のグループ名を変更したり削除したとき行うと良い。
+
+
+:SignageEditfile				*:SignageEditfile*
+	現在のマークを|signage-file|に書き出し、窓分割してそれを編集する。
+	|signage-file|を:writeすると全てのマークが更新される。
+	キーバインド|<Plug>(signage-edit)|と同じ。
+	
+
+キーバインド					*signage-keybind*
+------------
+
+全てのバインドは新しく割り当てられると規定のバインドは無効化される。
+規定のバインドを全て無効にするには|g:disable_defa_binds|を定義すると良い。
+
+<Plug>(signage-marking)				*<Plug>(signage-marking)*
+(規定: nmap mm)
+	カーソル位置をマークする。すでにマークがある場合はマーク解除する。
+
+<Plug>(signage-input)				*<Plug>(signage-input)*
+(規定: nmap mi)
+	カーソル位置をマークし、コメントを付ける。
+	コメントはマークジャンプの時やmsでマークの状態を表示させた時などに
+	見ることが出来る。
+	すでにカーソル位置がマークがされている場合、新しくコメントを付ける。
+	その場合、古いコメントは削除される。
+
+<Plug>(signage-append)				*<Plug>(signage-append)*
+(規定: nmap ma)
+	|<Plug>(signage-input)|とほとんど同じ。だが、カーソル位置のマークに
+	すでにコメントが付けられている場合、|<Plug>(signage-input)|はコメント
+	を削除して上書きしたが、<Plug>(signage-append)は既存のコメントの後ろに
+	コメントを追加する。
+
+<Plug>(signage-delete)				*<Plug>(signage-delete)*
+(規定: nmap md)
+	カーソル位置のマークを削除する。
+	|<Plug>(signage-marking)|があるのになぜこれがあるのかというと、
+	このプラグインの初期段階では|<Plug>(signage-marking)|に削除機能が
+	なかったその名残。
+
+<Plug>(signage-status)				*<Plug>(signage-status)*
+(規定: nmap ms)
+	カーソル位置のマークのステータスを表示する。
+	付加したコメントや、マーク当時のカーソル位置周辺文字列を表示する。
+
+<Plug>(signage-next)				*<Plug>(signage-next)*
+(規定: nmap mj)
+	現在マークグループにおける、次のマークにジャンプする。
+	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
+<Plug>(signage-prev)				*<Plug>(signage-prev)*
+(規定: nmap mk)
+	現在マークグループにおける、前のマークにジャンプする。
+	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
+<Plug>(signage-next-all)			*<Plug>(signage-next-all)*
+(規定: nmap mn)
+	全てのマークグループにおける、次のマークにジャンプする。
+	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
+<Plug>(signage-prev-all)			*<Plug>(signage-prev-all)*
+(規定: nmap mp)
+	全てのマークグループにおける、前のマークにジャンプする。
+	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
+
+<Plug>(signage-toggle-crrbuf-only)		*<Plug>(signage-toggle-crrbuf-only)*
+(規定: nmap mo)
+						*crrbuf-only-mode*
+	マークジャンプでの移動先を現在バッファのみに限定するモード
+	(crrbuf-only-mode)と、通常モードを切り替える。
+	すでにsignが置かれているバッファでのみ効果がある。
+	crrbuf-only-modeになると、それを示すため左のsignカラムの色が変化する。
+
+<Plug>(signage-group-Lcycle)			*<Plug>(signage-group-Lcycle)*
+(規定: nmap mh)
+	現在マークグループを前のものに切り替える。
+	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
+
+<Plug>(signage-group-Rcycle)			*<Plug>(signage-group-Rcycle)*
+(規定: nmap ml)
+	現在マークグループを次のものに切り替える。
+	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
+
+<Plug>(signage-groups-menu)			*<Plug>(signage-groups-menu)*
+(規定: nmap mg)
+	グループ切換メニューを出す。
+	入力時に|g:signage_shiftgroup_pat|で指定されたパターン含むと、
+	カーソル位置のマークのグループ所属を変更する。
+	最初のメニューではグループ先頭文字を指定する。
+	それで一意に定まらないときの絞り込みメニューでは含む文字を指定する。
+
+<Plug>(signage-groups-menu-shift)		*<Plug>(signage-groups-menu-shift)*
+(規定: 未定義)
+	グループ切換メニューを出す。
+	|<Plug>(signage-groups-menu)|と違って|g:signage_shiftgroup_pat|が入力
+	されたかどうかに関係なくカーソル位置のマークのグループ所属を変更する。
+
+
+<Plug>(signage-clear)				*<Plug>(signage-clear)*
+(規定: nmap mc)
+	マーク削除メニューを出す。(a/b/c/d)から選択する。
+	(a):現在マークグループのマークを、現在バッファから削除
+	(b):全てのグループのマークを、現在バッファから削除
+	(c):現在マークグループのマークを、全てのバッファから削除
+	(d):全てのマークを削除
+
+<Plug>(signage-edit)				*<Plug>(signage-edit)*
+(規定: nmap mq)
+	現在のマークを|signage-file|に書き出し、窓分割してそれを編集する。
+	|signage-file|を:writeすると全てのマークが更新される。
+	コマンド|:SignageEditfile|と同じ。
+
+unite.vim						*signage-unite*
+---------
+:Unite signage					*unite-signage*
+	全てのマークの一覧メニューを出す。選択してジャンプすることが出来る。
+	残念ながらdelete機能などは付けていない。
+	（将来的には機能を増やすかも）
+
+==============================================================================
+補足説明					*signage-supplementary*
+
+マーク属性					*signage-mark-attribute*
+signageの設置するマークは1つにつきそれぞれ次の属性を持つ。
+
+ 要素(key)	説明 ~
+ path		そのマークのあるファイルのフルパス
+ pos		そのマークの場所[0, lnum, col, 0] (getpos()で取得できるもの)
+ group		そのマークが属するグループのグループ名
+ ctx		そのマークがされたときのカーソル位置周囲の文字
+ attach		そのマークに付けられたコメント
+
+						*signage-markgroups*
+マークは必ずどこかのグループに所属し、所属しているグループのsignが設置される。
+mmでマークした時点での現在マークグループがそのマークの所属グループになる。
+例えば、次のようなg:markgroupsが定義された状態で、 >
+ let g:markgroups = [
+   \{'name': 'Point', 'char': '点', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
+   \{'name': 'Changed', 'char': '変', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
+   \{'name': 'Advancing', 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
+   \{'name': 'Later', 'char': '後', 'linehl': 'linehl_orange', 'charhl': 'texthl_orange'},
+   \{'name': 'Issue', 'char': '問', 'linehl': 'linehl_red', 'charhl': 'texthl_red'},
+   \{'name': 'Delete', 'char': '削', 'linehl': 'linehl_purple', 'charhl': 'texthl_purple'},
+   \{'name': 'Note', 'char': '記', 'linehl': 'linehl_green', 'charhl': 'texthl_green'},
+   \]
+グループ名'Point'に所属したマークは >
+ sign define Point text=点 linehl=linehl_gray texthl=texthl_gray
+というハイライトのsignが施される。
+ここでカーソルをそのマークに合わせてグループを例えばデフォルトバインドmlで
+変更してみると、所属グループが'Changed'に変更され、signも >
+ sign define Changed text=変 linehl=linehl_blue texthl=texthl_blue
+に変更される。
+
+現在マークグループを確認するにはマークのないところでデフォルトバインドmsで
+現在状態を確認すると良い。
+
+
+signage-file					*signage-file*
+|g:signage_dir|以下に、signageという名前で作られる、マークを保存した
+ファイル。Vim起動時に読み込まれ、終了時に書き込まれる。
+また、|:SignageEditfile|や|<Plug>(signage-edit)|を実行したときにも
+書き込まれ、このファイルを編集保存したときには読み込まれる。
+
+
+==============================================================================
+仕様・不具合					*signage-specification*
+
+ ・ホームディレクトリ（デフォルト）に設定ファイル・ディレクトリを作成する。
+ ・正常終了時にマークを設定ファイルに書き込むので、クラッシュ時には
+	マークの記録は失われてしまう。
+ ・signageのマークはヤンクやデリートなどのオペレータとして使えない。
+ ・デフォルトキーバインドはマークバインドを潰してしまう。
+ ★無名バッファにマークできない。
+ ・ヘルプファイルへのマークは動作保証外。
+ ★同じ行に複数マークできない。もし同じ行に複数マークがある場合、古い方は
+	削除される。さもなくば不具合を起こす。
+ ・signの識別子(id)は100700325のような形式である。これは、初めの1が固定で、
+	次の3桁がバッファ番号、最後の5桁が行番号である。
+	（enablesign=1でマークしてから:sign placeを実行すると大凡理解できる
+	だろう）
+ ・よって、1000番以降のバッファ、100000行を越えるバッファではうまく動かない。
+
+
+Vim-sign側の問題
+ ・signを使うと左に2行のカラムが追加されて折畳表示がそのカラムに食い込んで
+	残念な感じになるのはVimの仕様。
+ ・signを使うとビジュアル選択時のハイライトされている部分と実際に選択されて
+	いる部分が食い違う現象が発生する。
+ ・signした部分を行頭からvisual選択すると選択した部分がhl-Visualで
+	ハイライトされない。よって選択部分が分かりづらい。
+ ・signのある行はタブインデントが見かけ上揃わなくなる。Vimの問題。
+ ・signのある行は'colorcolumn'の表示がずれる。
+ ・同じ行に複数のsignを設置すると後に設置されたsignに前のsignのハイライトが
+	上書きされてしまう（その後、後から設置したsignを除いても以前のsignは
+	復活しない）。
+ ・窓分割している状態でsign jumpするとカーソルが他窓に強制移動させられてしまう
+	ことがある。(signageでは移動コマンドはsetpos()を利用しているので、
+	直接この仕様の被害を被ることはない。)
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:noet:fen:fdl=0:nolist:
