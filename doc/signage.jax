@@ -50,7 +50,7 @@ https://github.com/Shougo/unite.vim
 グローバル変数					*signage-variables*
 
 |g:signage_dir|					*g:signage_dir*
-(文字列  規定値: '~/.signage/')
+(文字列  既定値: '~/.signage/')
 	このディレクトリ以下にマーク保存ファイル|signage-file|を作成。
 
 
@@ -80,7 +80,7 @@ https://github.com/Shougo/unite.vim
 
 
 |g:signage_shiftgroup_pat|			*g:signage_shiftgroup_pat*
-(文字列  規定値: '@')
+(文字列  既定値: '@')
 	|<Plug>(signage-groups-menu)|で表示されるメニューにおいて、
 	g:signage_shiftgroup_patに含まれる文字を入力すると、カーソル位置の
 	マークの所属グループがそれに変更される。
@@ -95,8 +95,8 @@ https://github.com/Shougo/unite.vim
 |g:defa_grouppoi|				*g:defa_grouppoi*
 (数値  既定値: 未定義)
 	定義されていると起動時のs:grouppoiの値にこれが代入される。
-	例えばg:defa_grouppoi=0だと一番目のマークグループが規定になる。
-	g:defa_grouppoi=3だと四番目のマークグループが規定になる。
+	例えばg:defa_grouppoi=0だと一番目のマークグループが既定になる。
+	g:defa_grouppoi=3だと四番目のマークグループが既定になる。
 
 ==============================================================================
 操作体系
@@ -119,21 +119,21 @@ https://github.com/Shougo/unite.vim
 	現在のマークを|signage-file|に書き出し、窓分割してそれを編集する。
 	|signage-file|を:writeすると全てのマークが更新される。
 	キーバインド|<Plug>(signage-edit)|と同じ。
-	
+
 
 キーバインド					*signage-keybind*
 ------------
 
-全てのバインドは新しく割り当てられると規定のバインドは無効化される。
-規定のバインドを全て無効にするには|g:disable_defa_binds|を定義すると良い。
+全てのバインドは新しく割り当てられると既定のバインドは無効化される。
+既定のバインドを全て無効にするには|g:disable_defa_binds|を定義すると良い。
 
 <Plug>(signage-marking)				*<Plug>(signage-marking)*
-(規定: nmap mm)
+(既定: nmap mm)
 	カーソル位置をマークする。すでにマークがある場合はマーク解除する。
 
 
 <Plug>(signage-input)				*<Plug>(signage-input)*
-(規定: nmap mi)
+(既定: nmap mi)
 	カーソル位置をマークし、コメントを付ける。
 	コメントはマークジャンプの時やmsでマークの状態を表示させた時などに
 	見ることが出来る。
@@ -142,7 +142,7 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-append)				*<Plug>(signage-append)*
-(規定: nmap ma)
+(既定: nmap ma)
 	|<Plug>(signage-input)|とほとんど同じ。だが、カーソル位置のマークに
 	すでにコメントが付けられている場合、|<Plug>(signage-input)|はコメント
 	を削除して上書きしたが、<Plug>(signage-append)は既存のコメントの後ろに
@@ -150,7 +150,7 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-delete)				*<Plug>(signage-delete)*
-(規定: nmap md)
+(既定: nmap md)
 	カーソル位置のマークを削除する。
 	|<Plug>(signage-marking)|があるのになぜこれがあるのかというと、
 	このプラグインの初期段階では|<Plug>(signage-marking)|に削除機能が
@@ -158,37 +158,37 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-status)				*<Plug>(signage-status)*
-(規定: nmap ms)
+(既定: nmap ms)
 	カーソル位置のマークのステータスを表示する。
 	付加したコメントや、マーク当時のカーソル位置周辺文字列を表示する。
 
 
 <Plug>(signage-next)				*<Plug>(signage-next)*
-(規定: nmap mj)
+(既定: nmap mj)
 	現在マークグループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-prev)				*<Plug>(signage-prev)*
-(規定: nmap mk)
+(既定: nmap mk)
 	現在マークグループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-next-all)			*<Plug>(signage-next-all)*
-(規定: nmap mn)
+(既定: nmap mn)
 	全てのマークグループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-prev-all)			*<Plug>(signage-prev-all)*
-(規定: nmap mp)
+(既定: nmap mp)
 	全てのマークグループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-toggle-crrbuf-only)		*<Plug>(signage-toggle-crrbuf-only)*
-(規定: nmap mo)
+(既定: nmap mo)
 						*crrbuf-only-mode*
 	マークジャンプでの移動先を現在バッファのみに限定するモード
 	(crrbuf-only-mode)と、通常モードを切り替える。
@@ -197,19 +197,19 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-group-Lcycle)			*<Plug>(signage-group-Lcycle)*
-(規定: nmap mh)
+(既定: nmap mh)
 	現在マークグループを前のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
 
 
 <Plug>(signage-group-Rcycle)			*<Plug>(signage-group-Rcycle)*
-(規定: nmap ml)
+(既定: nmap ml)
 	現在マークグループを次のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
 
 
 <Plug>(signage-groups-menu)			*<Plug>(signage-groups-menu)*
-(規定: nmap mg)
+(既定: nmap mg)
 	グループ切換メニューを出す。
 	入力時に|g:signage_shiftgroup_pat|で指定されたパターン含むと、
 	カーソル位置のマークのグループ所属を変更する。
@@ -218,14 +218,14 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-groups-menu-shift)		*<Plug>(signage-groups-menu-shift)*
-(規定: 未定義)
+(既定: 未定義)
 	グループ切換メニューを出す。
 	|<Plug>(signage-groups-menu)|と違って|g:signage_shiftgroup_pat|が入力
 	されたかどうかに関係なくカーソル位置のマークのグループ所属を変更する。
 
 
 <Plug>(signage-clear)				*<Plug>(signage-clear)*
-(規定: nmap mc)
+(既定: nmap mc)
 	マーク削除メニューを出す。(a/b/c/d)から選択する。
 	(a):現在マークグループのマークを、現在バッファから削除
 	(b):全てのグループのマークを、現在バッファから削除
@@ -234,7 +234,7 @@ https://github.com/Shougo/unite.vim
 
 
 <Plug>(signage-edit)				*<Plug>(signage-edit)*
-(規定: nmap mq)
+(既定: nmap mq)
 	現在のマークを|signage-file|に書き出し、窓分割してそれを編集する。
 	|signage-file|を:writeすると全てのマークが更新される。
 	コマンド|:SignageEditfile|と同じ。
