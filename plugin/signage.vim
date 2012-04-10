@@ -487,6 +487,7 @@ function! s:register(attach,crrinfo,crrbufnr,grouppoi,nodelete) "{{{
     for picked in s:markslist
       if [picked.path,picked.pos[1]] == [a:crrinfo.path,a:crrinfo.pos[1]]
         let novirgin = 1
+        let mlidx = index(s:markslist, picked)
       endif
     endfor
   endtry
