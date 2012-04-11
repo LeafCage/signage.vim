@@ -11,8 +11,8 @@ endif
 let s:signage_dir = fnamemodify(g:signage_dir, ':p')
 unlet g:signage_dir
 
-if !exists('g:markgroups')
-  let g:markgroups = [
+if !exists('g:signage_groups')
+  let g:signage_groups = [
         \{'name': 'Point', 'char': '点', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
         \{'name': 'Changed', 'char': '変', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
         \{'name': 'Advancing', 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
@@ -24,9 +24,9 @@ if !exists('g:markgroups')
 endif
 
 let s:grouppoi = 0
-if exists('g:defa_grouppoi')
-  let s:grouppoi = g:defa_grouppoi
-  unlet g:starting_group
+if exists('g:signage_defa_grouppoi')
+  let s:grouppoi = g:signage_defa_grouppoi
+  unlet g:signage_defa_grouppoi
 endif
 let s:chk_continue = ''
 
@@ -100,7 +100,7 @@ noremap <silent> <Plug>(signage-edit) :<C-u>call <SID>Editmarksfile()<CR>
 noremap <silent> <Plug>(signage-clear) :<C-u>call <SID>Clearmarks()<CR>
 "noremap <silent> <Plug>(signage-onetime) :<C-u>call <SID>Putonetime()<CR>
 noremap <silent> <Plug>(signage-toggle-crrbuf-only) :<C-u>call <SID>Crrbuf_only()<CR>
-if !get(g:,'disable_defa_binds')
+if !get(g:,'signage_disable_defa_binds')
   if !hasmapto('<Plug>(signage-marking)')
     nmap mm <Plug>(signage-marking)
   endif
@@ -189,7 +189,7 @@ function! s:optimize_sign(allbuffers,path) "{{{
       continue
     endif
 
-    for pickedgroup in g:markgroups
+    for pickedgroup in g:signage_groups
       if pickedmark.group != pickedgroup.name
         continue
       endif
@@ -236,13 +236,13 @@ endfunction "}}}
 function! s:shiftgroup_update_sign(marklistidx, groupsidx, sign_id) "{{{
   exe 'sign unplace '.a:sign_id
 
-  let s:markslist[a:marklistidx].group = g:markgroups[a:groupsidx].name
-  exe 'sign define '.g:markgroups[a:groupsidx]['name'].' text='.g:markgroups[a:groupsidx]['char'].' linehl='.g:markgroups[a:groupsidx]['linehl'].' texthl='.g:markgroups[a:groupsidx]['charhl']
+  let s:markslist[a:marklistidx].group = g:signage_groups[a:groupsidx].name
+  exe 'sign define '.g:signage_groups[a:groupsidx]['name'].' text='.g:signage_groups[a:groupsidx]['char'].' linehl='.g:signage_groups[a:groupsidx]['linehl'].' texthl='.g:signage_groups[a:groupsidx]['charhl']
   exe 'sign unplace '.a:sign_id
   exe 'sign place '.a:sign_id.' line='.s:markslist[a:marklistidx]['pos'][1].' name='.s:markslist[a:marklistidx]['group'].' file='.s:markslist[a:marklistidx]['path']
 endfunction "}}}
 function! s:make_navi(Groupname, Markslistend) "{{{
-  let groupname = a:Groupname == '' ? g:markgroups[s:grouppoi].name : a:Groupname
+  let groupname = a:Groupname == '' ? g:signage_groups[s:grouppoi].name : a:Groupname
   let markslistend = a:Markslistend == -1 ? len(s:markslist)-1 : a:Markslistend
   let groupcontents = 0
   let num_inthegroup = 0
@@ -343,12 +343,12 @@ endfunction "}}}
 "旧m1-m9
 function! s:Groupshift(idxnum) "{{{
   let s:chk_continue = 'groupshift'
-  let markgroupsend = len(g:markgroups)-1
+  let markgroupsend = len(g:signage_groups)-1
   let idxnum = a:idxnum-1 > markgroupsend ? markgroupsend : a:idxnum-1
   let s:grouppoi = idxnum
   let navi = s:make_navi('', -1)
   redraw|echo ''
-  echo 'Signage: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
+  echo 'Signage: Set group at ['.g:signage_groups[s:grouppoi]['name'].']'.navi
 endfunction "}}}
 "旧mo
 "let s:count_sign = 100 "{{{
@@ -370,12 +370,12 @@ endfunction "}}}
 function! s:Clearmarks() "{{{
   let s:chk_continue = 'clearmarks'
   let markslistend = len(s:markslist)-1
-  let crrgroup = g:markgroups[s:grouppoi].name
-  let groupstatus = s:make_menu_selgroup(g:markgroups, markslistend)
-  let input = input("SignageClearmarks: [".g:markgroups[s:grouppoi]['name']."] (TTL:".(markslistend+1).") (a/b/c/d)\n".groupstatus."(a):In current buffer, the current group.\n(b):In current buffer, all groups.\n(c):In all buffers, the current group.\n(d):In all buffers, all groups.\n" )
+  let crrgroup = g:signage_groups[s:grouppoi].name
+  let groupstatus = s:make_menu_selgroup(g:signage_groups, markslistend)
+  let input = input("SignageClearmarks: [".g:signage_groups[s:grouppoi]['name']."] (TTL:".(markslistend+1).") (a/b/c/d)\n".groupstatus."(a):In current buffer, the current group.\n(b):In current buffer, all groups.\n(c):In all buffers, the current group.\n(d):In all buffers, all groups.\n" )
   if input == 'a'
     for picked in s:markslist
-      if picked.group == g:markgroups[s:grouppoi].name && picked.path == s:crrpath
+      if picked.group == g:signage_groups[s:grouppoi].name && picked.path == s:crrpath
         exe 'sign unplace '.signage_port#make_signid(1,bufnr('%'),picked.pos[1])
         call remove(s:markslist, index(s:markslist, picked))
       endif
@@ -389,7 +389,7 @@ function! s:Clearmarks() "{{{
     endfor
   elseif input == 'c'
     for picked in s:markslist
-      if picked.group == g:markgroups[s:grouppoi].name
+      if picked.group == g:signage_groups[s:grouppoi].name
         if bufloaded(picked.path)
           exe 'sign unplace '.signage_port#make_signid(1,bufnr(picked.path),picked.pos[1])
         endif
@@ -435,7 +435,7 @@ function! s:Handlemark(command) "{{{
   catch /Signage:.\{-}not.\{-}/
     let navi = s:make_navi('',-1)
     redraw|echo ''
-    echo 'Signage: Such mark is not found. ['.g:markgroups[s:grouppoi]['name'].'] '.navi
+    echo 'Signage: Such mark is not found. ['.g:signage_groups[s:grouppoi]['name'].'] '.navi
     return
   endtry
   let s:markslistpoi = idx
@@ -472,7 +472,7 @@ function! s:Registermarks(attach) "{{{
   if empty(crrinfo)
     return
   endif
-  let crrinfo.group = g:markgroups[s:grouppoi].name
+  let crrinfo.group = g:signage_groups[s:grouppoi].name
   let crrbufnr = bufnr('%')
 
   let groupname = s:register(a:attach,crrinfo,crrbufnr,s:grouppoi,0)
@@ -516,7 +516,7 @@ function! s:register(attach,crrinfo,crrbufnr,grouppoi,nodelete) "{{{
   endif
 
   if !novirgin
-    exe 'sign define '.g:markgroups[a:grouppoi]['name'].' text='.g:markgroups[a:grouppoi]['char'].' linehl='.g:markgroups[a:grouppoi]['linehl'].' texthl='.g:markgroups[a:grouppoi]['charhl']
+    exe 'sign define '.g:signage_groups[a:grouppoi]['name'].' text='.g:signage_groups[a:grouppoi]['char'].' linehl='.g:signage_groups[a:grouppoi]['linehl'].' texthl='.g:signage_groups[a:grouppoi]['charhl']
     let sign_id = signage_port#make_signid(1,a:crrbufnr, a:crrinfo.pos[1])
     exe 'sign unplace '.sign_id
     exe 'sign place '.sign_id.' line='.a:crrinfo['pos'][1].' name='.a:crrinfo['group'].' file='.a:crrinfo['path']
@@ -536,7 +536,7 @@ function! s:show_registered(groupname, groupsidx)  "{{{1
         "\s:markslist[s:markslistpoi]['group'], s:markslist[s:markslistpoi]['ctx'],
         "\navi, s:markslist[s:markslistpoi]['attach'])
   echo 'SignageRegistered: '.printf('[%s] %s %s',
-        \g:markgroups[a:groupsidx]['name'],
+        \g:signage_groups[a:groupsidx]['name'],
         \navi, showattach)
 endfunction "}}}1
 "mv
@@ -550,6 +550,12 @@ function! s:Movemark() "{{{
   let crrbufnr = bufnr('%')
   if s:markslist[s:markslistpoi].path != s:crrpath
     return
+    "for picked in reverse(s:markslist) "[TODO]
+    "  if picked.path == s:crrpath
+    "    let s:markslistpoi = index(s:markslist, picked)
+    "    break
+    "  endif
+    "endfor
   endif
   "現在地にすでにマークがあるか確認する
   try
@@ -561,7 +567,7 @@ function! s:Movemark() "{{{
       if [picked.path,picked.pos[1]] != [s:crrpath, crrpos[1]]
         continue
       endif
-      for pickedgroup in g:markgroups
+      for pickedgroup in g:signage_groups
         if pickedgroup.name != picked.group
           continue
         endif
@@ -584,12 +590,12 @@ function! s:Movemark() "{{{
   if nosign == 0
     let s:markslist[s:markslistpoi].pos[1] = correctlnum
   endif
-  for picked in g:markgroups
+  for picked in g:signage_groups
     if picked.name != s:markslist[s:markslistpoi].group
       continue
     endif
     let group = picked
-    let groupidx = index(g:markgroups,picked)
+    let groupidx = index(g:signage_groups,picked)
   endfor
   "現在地をsignする
   exe 'sign define '.group['name'].' text='.group['char'].' linehl='.group['linehl'].' texthl='.group['charhl']
@@ -613,7 +619,7 @@ function! s:Cycle_marks(ascending, allgroups) "{{{
   if empty(s:markslist)
     let navi = s:make_navi('',-1)
     redraw|echo ''
-    echo 'Signage: No marks is setted. ['.g:markgroups[s:grouppoi]['name'].'] '.navi
+    echo 'Signage: No marks is setted. ['.g:signage_groups[s:grouppoi]['name'].'] '.navi
     return
   endif
 
@@ -622,7 +628,7 @@ function! s:Cycle_marks(ascending, allgroups) "{{{
     let s:markslistpoi = markslistend
   endif
 
-  if s:markslist[s:markslistpoi].group != g:markgroups[s:grouppoi].name && !a:allgroups
+  if s:markslist[s:markslistpoi].group != g:signage_groups[s:grouppoi].name && !a:allgroups
     let s:markslistpoi = -1
   endif
   if s:markslistpoi == -1 "poiが初期化されているとき
@@ -638,7 +644,7 @@ function! s:Cycle_marks(ascending, allgroups) "{{{
       while 1
         let s:markslistpoi = s:cycle_poi_in_group(a:ascending)
         if s:markslistpoi == -1
-          echo 'Signage: This group has no marks. ['.g:markgroups[s:grouppoi]['name'].']'
+          echo 'Signage: This group has no marks. ['.g:signage_groups[s:grouppoi]['name'].']'
           return
         elseif s:markslist[s:markslistpoi].path != s:crrpath && s:signage_bufonly == 1
           continue
@@ -710,7 +716,7 @@ endfunction "}}}
 "idxポインタをグループ内の次のmarkまでサイクルさせる（末尾でループ）
 function! s:cycle_poi_in_group(ascending) "{{{
   let markslistend = len(s:markslist)-1
-  let crrgroupname = g:markgroups[s:grouppoi].name
+  let crrgroupname = g:signage_groups[s:grouppoi].name
   if a:ascending
     let newpoi = s:nextpoi_in_group(1,0,s:markslistpoi,crrgroupname)
     if newpoi == -1
@@ -751,15 +757,15 @@ endfunction "}}}
 function! s:GroupsMenu(shift) "{{{
   let s:chk_continue = 'groupsmenu'
   let markslistend = len(s:markslist)-1
-  let markgroupsend = len(g:markgroups)-1
+  let markgroupsend = len(g:signage_groups)-1
 
   let shift = a:shift ? 1 : 0
-  let groupsclone = copy(g:markgroups)
+  let groupsclone = copy(g:signage_groups)
   let firsttime = 1
   while len(groupsclone) > 1
     let menutext = s:make_menu_selgroup(groupsclone,markslistend)
 
-    let input = input("SignageGroupsMenu: [".g:markgroups[s:grouppoi]['name']."] (TTL:".(markslistend+1).")\n".menutext)
+    let input = input("SignageGroupsMenu: [".g:signage_groups[s:grouppoi]['name']."] (TTL:".(markslistend+1).")\n".menutext)
     if input == ''
       return
     endif
@@ -772,7 +778,7 @@ function! s:GroupsMenu(shift) "{{{
     redraw|echo ''
   endwhile
   if !empty(groupsclone)
-    let s:grouppoi = index(g:markgroups, groupsclone[0])
+    let s:grouppoi = index(g:signage_groups, groupsclone[0])
   endif
 
   let crrbufnr = bufnr('%')
@@ -787,7 +793,7 @@ function! s:GroupsMenu(shift) "{{{
   endtry
 
   let navi = s:make_navi('', markslistend)
-  echo 'Signage: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi
+  echo 'Signage: Set group at ['.g:signage_groups[s:grouppoi]['name'].']'.navi
 endfunction "}}}
 function! s:make_menu_selgroup(grouplist,Markslistend) "{{{
   let menutext = ''
@@ -809,7 +815,7 @@ endfunction "}}}
 "mh ml
 function! s:Cycle_group(ascending) "{{{
   let s:chk_continue = 'cycle_group'
-  let markgroupsend = len(g:markgroups)-1
+  let markgroupsend = len(g:signage_groups)-1
   let s:grouppoi = lclib#cycle_poi(a:ascending, s:grouppoi, markgroupsend)
 
   let crrlnum = line('.')
@@ -822,7 +828,7 @@ function! s:Cycle_group(ascending) "{{{
   redraw|echo ''
   let navi = s:make_navi('', -1)
   let showattach = s:markslistpoi==-1 ? '' : s:markslist[s:markslistpoi]['attach']
-  echo 'Signage: Set group at ['.g:markgroups[s:grouppoi]['name'].']'.navi.' '.showattach
+  echo 'Signage: Set group at ['.g:signage_groups[s:grouppoi]['name'].']'.navi.' '.showattach
 endfunction "}}}
 "mo
 let s:signage_bufonly = 0
@@ -855,7 +861,7 @@ endfunction "}}}
 ":SignageFindInvalidGroups
 function! s:Find_invalidgroups(rename) "{{{
   let groupnamespat = ''
-  for pickedgroup in g:markgroups
+  for pickedgroup in g:signage_groups
     let groupnamespat .= substitute(pickedgroup['name'],'.\+','\\<\0\\>\\|','')
   endfor
   let groupnamespat = substitute(groupnamespat, '\\|$', '','')
@@ -876,7 +882,7 @@ function! s:Find_invalidgroups(rename) "{{{
   endif
 
   for invalidgroupname in invalidgroups
-    let groupsclone = copy(g:markgroups)
+    let groupsclone = copy(g:signage_groups)
     let firsttime = 1
     while len(groupsclone) > 1
       echo "Signage: What do you want to rename [".invalidgroupname."] to?\n"
@@ -893,7 +899,7 @@ function! s:Find_invalidgroups(rename) "{{{
       continue
     endif
     if !empty(groupsclone)
-      let idx = index(g:markgroups,groupsclone[0])
+      let idx = index(g:signage_groups,groupsclone[0])
       cal s:rename_invalidgroup(invalidgroupname, groupsclone[0].name, idx)
       echo '['.invalidgroupname.'] is renamed to ['.groupsclone[0].name.'].'
     endif
@@ -903,7 +909,7 @@ function! s:rename_invalidgroup(invalidgroupname, renamedgroupname, idx) "{{{
   for picked in s:markslist
     if picked.group == a:invalidgroupname
       let picked.group = a:renamedgroupname
-      exe 'sign define '.g:markgroups[a:idx]['name'].' text='.g:markgroups[a:idx]['char'].' linehl='.g:markgroups[a:idx]['linehl'].' texthl='.g:markgroups[a:idx]['charhl']
+      exe 'sign define '.g:signage_groups[a:idx]['name'].' text='.g:signage_groups[a:idx]['char'].' linehl='.g:signage_groups[a:idx]['linehl'].' texthl='.g:signage_groups[a:idx]['charhl']
       let sign_id = signage_port#make_signid(1,bufnr(picked.path), picked.pos[1])
       exe 'sign unplace '.sign_id
       exe 'sign place '.sign_id.' line='.picked['pos'][1].' name='.picked['group'].' file='.picked['path']
@@ -920,9 +926,9 @@ function! s:Setmark(...) "{{{
 
   if a:0
     let notfind = 1
-    for picked in g:markgroups
+    for picked in g:signage_groups
       if picked.name == a:1
-        let localgrouppoi = index(g:markgroups, picked)
+        let localgrouppoi = index(g:signage_groups, picked)
         let crrinfo.group = a:1
         let notfind = 0
       endif
@@ -932,7 +938,7 @@ function! s:Setmark(...) "{{{
       return
     endif
   else
-    let crrinfo.group = g:markgroups[s:grouppoi].name
+    let crrinfo.group = g:signage_groups[s:grouppoi].name
   endif
   let crrbufnr = bufnr('%')
 
@@ -977,7 +983,7 @@ unlet s:save_cpo
 
 
 
-"TODO
+"Maybe:
 "mu マーク操作をアンドゥ
 "limit属性 この数以上のマークは存在できない。越えたときは古いマークが削除
 "添付メッセージをgrep

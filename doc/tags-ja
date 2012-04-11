@@ -22,8 +22,8 @@
 crrbuf-only-mode	signage.jax	/*crrbuf-only-mode*
 g:defa_grouppoi	signage.jax	/*g:defa_grouppoi*
 g:disable_defa_binds	signage.jax	/*g:disable_defa_binds*
-g:markgroups	signage.jax	/*g:markgroups*
 g:signage_dir	signage.jax	/*g:signage_dir*
+g:signage_groups	signage.jax	/*g:signage_groups*
 g:signage_shiftgroup_pat	signage.jax	/*g:signage_shiftgroup_pat*
 signage-attention	signage.jax	/*signage-attention*
 signage-changelog	signage.jax	/*signage-changelog*

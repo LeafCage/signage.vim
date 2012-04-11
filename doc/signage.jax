@@ -26,8 +26,8 @@ CHANGELOG			|signage-changelog|
  ・すでにマークされているところにmmでマークの解除。
  ・mj mk mn mpで過去のマークをブラウズする。
  ・moでマークブラウズを現在バッファ内だけに限定する。
- ・mh mlで現在地マークのマークグループ|signage-markgroups|所属を変更する。
- ・mgで現在マークグループ変更メニューを出す。
+ ・mh mlで現在地マークのグループ|signage-markgroups|所属を変更する。
+ ・mgで現在グループ変更メニューを出す。
  ・mi maでコメント付きでマークする（miは新規・総書換／maは既存コメに追記）
  ・mdで現在行のマークを削除する。
  ・msで現在行のマークの詳細情報を表示。
@@ -56,12 +56,12 @@ CHANGELOG			|signage-changelog|
 	このディレクトリ以下にマーク保存ファイル|signage-file|を作成。
 
 
-|g:markgroups|					*g:markgroups*
+|g:signage_groups|				*g:signage_groups*
 (リスト  既定値: 例に挙げたもの)
-	マークグループ|signage-markgroups|を例のように設定する。
+	グループ|signage-markgroups|を例のように設定する。
 	signハイライトのさせ方をここで定義する。
  例： >
- let g:markgroups = [
+ let g:signage_groups = [
    \{'name': 'Point', 'char': '点', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
    \{'name': 'Changed', 'char': '変', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
    \{'name': 'Advancing', 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
@@ -88,17 +88,17 @@ CHANGELOG			|signage-changelog|
 	マークの所属グループがそれに変更される。
 
 
-|g:disable_defa_binds|				*g:disable_defa_binds*
+|g:signage_disable_defa_binds|			*g:signage_disable_defa_binds*
 (数値  既定値: 未定義)
 	1だと全てのデフォルトキーバインドが無効になる。
 	バインドを全て自分で定義したい人向けのオプション。
 
 
-|g:defa_grouppoi|				*g:defa_grouppoi*
+|g:signage_defa_grouppoi|			*g:signage_defa_grouppoi*
 (数値  既定値: 未定義)
 	定義されていると起動時のs:grouppoiの値にこれが代入される。
-	例えばg:defa_grouppoi=0だと一番目のマークグループが既定になる。
-	g:defa_grouppoi=3だと四番目のマークグループが既定になる。
+	例えばg:signage_defa_grouppoi=0だと一番目のグループが既定になる。
+	g:signage_defa_grouppoi=3だと四番目のグループが既定になる。
 
 ==============================================================================
 操作体系
@@ -113,8 +113,8 @@ CHANGELOG			|signage-changelog|
 
 :SignageFixInvalidGroups			*:SignageFixInvalidGroups*
 	無効になっているグループ名を持つマークを発見・修正する。
-	すなわち|g:markgroups|にないグループのマークを見つける。
-	|g:markgroups|の既存のグループ名を変更したり削除したとき行うと良い。
+	すなわち|g:signage_groups|にないグループのマークを見つける。
+	|g:signage_groups|の既存グループ名を変更したり削除したとき行うと良い。
 
 
 :SignageEditfile				*:SignageEditfile*
@@ -127,7 +127,8 @@ CHANGELOG			|signage-changelog|
 ------------
 
 全てのバインドは新しく割り当てられると既定のバインドは無効化される。
-既定のバインドを全て無効にするには|g:disable_defa_binds|を定義すると良い。
+既定のバインドを全て無効にするには|g:signage_disable_defa_binds|を定義すると
+良い。
 
 <Plug>(signage-marking)				*<Plug>(signage-marking)*
 (既定: nmap mm)
@@ -173,25 +174,25 @@ CHANGELOG			|signage-changelog|
 
 <Plug>(signage-next)				*<Plug>(signage-next)*
 (既定: nmap mj)
-	現在マークグループにおける、次のマークにジャンプする。
+	現在グループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-prev)				*<Plug>(signage-prev)*
 (既定: nmap mk)
-	現在マークグループにおける、前のマークにジャンプする。
+	現在グループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-next-all)			*<Plug>(signage-next-all)*
 (既定: nmap mn)
-	全てのマークグループにおける、次のマークにジャンプする。
+	全てのグループにおける、次のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
 <Plug>(signage-prev-all)			*<Plug>(signage-prev-all)*
 (既定: nmap mp)
-	全てのマークグループにおける、前のマークにジャンプする。
+	全てのグループにおける、前のマークにジャンプする。
 	|crrbuf-only-mode|のときは現在バッファのマークのみをジャンプする。
 
 
@@ -206,13 +207,13 @@ CHANGELOG			|signage-changelog|
 
 <Plug>(signage-group-Lcycle)			*<Plug>(signage-group-Lcycle)*
 (既定: nmap mh)
-	現在マークグループを前のものに切り替える。
+	現在グループを前のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
 
 
 <Plug>(signage-group-Rcycle)			*<Plug>(signage-group-Rcycle)*
 (既定: nmap ml)
-	現在マークグループを次のものに切り替える。
+	現在グループを次のものに切り替える。
 	もしカーソル位置にマークがある場合、そのマークの所属が変更される。
 
 
@@ -235,9 +236,9 @@ CHANGELOG			|signage-changelog|
 <Plug>(signage-clear)				*<Plug>(signage-clear)*
 (既定: nmap mc)
 	マーク削除メニューを出す。(a/b/c/d)から選択する。
-	(a):現在マークグループのマークを、現在バッファから削除
+	(a):現在グループのマークを、現在バッファから削除
 	(b):全てのグループのマークを、現在バッファから削除
-	(c):現在マークグループのマークを、全てのバッファから削除
+	(c):現在グループのマークを、全てのバッファから削除
 	(d):全てのマークを削除
 
 
@@ -271,9 +272,9 @@ signageの設置するマークは1つにつきそれぞれ次の属性を持つ
 
 						*signage-markgroups*
 マークは必ずどこかのグループに所属し、所属しているグループのsignが設置される。
-mmでマークした時点での現在マークグループがそのマークの所属グループになる。
-例えば、次のようなg:markgroupsが定義された状態で、 >
- let g:markgroups = [
+mmでマークした時点での現在グループがそのマークの所属グループになる。
+例えば、次のようなg:signage_groupsが定義された状態で、 >
+ let g:signage_groups = [
    \{'name': 'Point', 'char': '点', 'linehl': 'linehl_gray', 'charhl': 'texthl_gray'},
    \{'name': 'Changed', 'char': '変', 'linehl': 'linehl_blue', 'charhl': 'texthl_blue'},
    \{'name': 'Advancing', 'char': '途', 'linehl': 'linehl_yellow', 'charhl': 'texthl_yellow'},
@@ -291,7 +292,7 @@ mmでマークした時点での現在マークグループがそのマークの
 に変更される。
 signハイライトは標準でsignage_port#def_signhl()で定義されたものを使っている。
 
-現在マークグループを確認するにはマークのないところでデフォルトバインドmsで
+現在グループを確認するにはマークのないところでデフォルトバインドmsで
 現在状態を確認すると良い。
 
 
@@ -318,8 +319,8 @@ signage-file					*signage-file*
 	この不具合発生の解消手段を現時点で用意していない。
 	|:SignageFixInvalidGroups|などで各人手動で解決するしかない。
 
- ・あるグループのマークが存在する状態で|g:markgroups|からそのグループを削除し
-	たとき、またはグループ名を変更したとき
+ ・あるグループのマークが存在する状態で|g:signage_groups|からそのグループを
+	削除したとき、またはグループ名を変更したとき
 	この場合、以前から存在しているマークが取り残されてしまうので、
 	|:SignageFixInvalidGroups|か|:SignageEditfile|で以前から存在している
 	マークのグループを変更することで解決できる
