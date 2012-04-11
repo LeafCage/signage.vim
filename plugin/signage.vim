@@ -40,7 +40,6 @@ let s:markslistpoi = -1
  "}}}
 
 
-
 augroup signage
   au!
   au BufRead * call <SID>restore_sign()
@@ -79,6 +78,7 @@ noremap <silent> <Plug>(signage-groups-menu-shift) :<C-u>call <SID>GroupsMenu(1)
 noremap <silent> <Plug>(signage-marking) :<C-u>call <SID>Registermarks(0)<CR>
 noremap <silent> <Plug>(signage-input) :<C-u>call <SID>Registermarks(1)<CR>
 noremap <silent> <Plug>(signage-append) :<C-u>call <SID>Registermarks(2)<CR>
+noremap <silent> <Plug>(signage-move) :<C-u>call <SID>Movemark()<CR>
 noremap <silent> <Plug>(signage-delete) :<C-u>call <SID>Handlemark('Delete')<CR>
 noremap <silent> <Plug>(signage-status) :<C-u>call <SID>Handlemark('Status')<CR>
 noremap <silent> <Plug>(signage-next) :<C-u>call <SID>Cycle_marks(0,0)<CR>
@@ -109,6 +109,9 @@ if !get(g:,'disable_defa_binds')
   endif
   if !hasmapto('<Plug>(signage-append)')
     nmap ma <Plug>(signage-append)
+  endif
+  if !hasmapto('<Plug>(signage-move)')
+    nmap mv <Plug>(signage-move)
   endif
   if !hasmapto('<Plug>(signage-next)')
     nmap mj <Plug>(signage-next)
@@ -536,6 +539,74 @@ function! s:show_registered(groupname, groupsidx)  "{{{1
         \g:markgroups[a:groupsidx]['name'],
         \navi, showattach)
 endfunction "}}}1
+"mv
+function! s:Movemark() "{{{
+  if empty(s:markslist)
+    return
+  endif
+  let s:markslistpoi = s:markslistpoi == -1 ? len(s:markslist)-1 : s:markslistpoi
+  let s:chk_continue = 'movemark'
+  let crrpos = getpos('.')
+  let crrbufnr = bufnr('%')
+  if s:markslist[s:markslistpoi].path != s:crrpath
+    return
+  endif
+  "現在地にすでにマークがあるか確認する
+  try
+    let [regedlnum, correctlnum] = s:lnum_s_sign2registeredlnum(crrpos[1], crrbufnr)
+    return
+  catch /Signage:.\{-}not.\{-}/
+    "signされていないマークの存在を確認する
+    for picked in s:markslist
+      if [picked.path,picked.pos[1]] != [s:crrpath, crrpos[1]]
+        continue
+      endif
+      for pickedgroup in g:markgroups
+        if pickedgroup.name != picked.group
+          continue
+        endif
+        exe 'sign define '.pickedgroup['name'].' text='.pickedgroup['char'].' linehl='.pickedgroup['linehl'].' texthl='.pickedgroup['charhl']
+        let sign_id = signage_port#make_signid(1, crrbufnr, crrpos[1])
+        exe 'sign unplace '.sign_id
+        exe 'sign place '.sign_id.' line='.crrpos[1].' name='.pickedgroup.name.' buffer='.crrbufnr
+        call signage_port#def_signhl()
+        return
+      endfor
+    endfor
+  endtry
+  "直近のマーク情報を得る
+  let nosign = 0
+  try
+    let [correctlnum,newID] = s:registeredlnum2correctlnum(s:markslist[s:markslistpoi].pos[1], s:crrpath)
+  catch
+    let nosign = 1
+  endtry
+  if nosign == 0
+    let s:markslist[s:markslistpoi].pos[1] = correctlnum
+  endif
+  for picked in g:markgroups
+    if picked.name != s:markslist[s:markslistpoi].group
+      continue
+    endif
+    let group = picked
+    let groupidx = index(g:markgroups,picked)
+  endfor
+  "現在地をsignする
+  exe 'sign define '.group['name'].' text='.group['char'].' linehl='.group['linehl'].' texthl='.group['charhl']
+  let sign_id = signage_port#make_signid(1,crrbufnr, crrpos[1])
+  exe 'sign unplace '.sign_id
+  exe 'sign place '.sign_id.' line='.crrpos[1].' name='.s:markslist[s:markslistpoi]['group'].' buffer='.crrbufnr
+  call signage_port#def_signhl()
+  "現在地をマーク登録して過去のマークを削除する
+  exe 'sign unplace '.signage_port#make_signid(1, crrbufnr, s:markslist[s:markslistpoi].pos[1])
+  let s:markslist[s:markslistpoi].pos = crrpos
+  call add(s:markslist, s:markslist[s:markslistpoi])
+  call remove(s:markslist, s:markslistpoi)
+  "s:markslistpoiを最終に合わせる
+  let s:markslistpoi = len(s:markslist)-1
+
+  call s:show_registered(group.name, groupidx)
+endfunction "}}}
 "mj mk mn mp
 function! s:Cycle_marks(ascending, allgroups) "{{{
   let s:chk_continue = 'cyclemarks'
@@ -907,13 +978,10 @@ unlet s:save_cpo
 
 
 "TODO
-"mu 最後に置いたsignを消してcrrposに新たに置く（移動させる）
+"mu マーク操作をアンドゥ
 "limit属性 この数以上のマークは存在できない。越えたときは古いマークが削除
 "添付メッセージをgrep
 "ビジュアル選択行を一気にsignする
-"invalidgroupsを正常化したとき(rename)、現在あるsignと場所が被ってしまったら問題が起きるのではないかという疑惑
-"同じ行に複数のマークがある場合、片側のmarkdel時にsignは両方削除されるのでsignし直す必要性
-"同じ行に複数のマークが何らかの原因で付けられた場合、終了時にエラーを吐くのでバッティング時は後のマークを優先し先のマークを削除する
 "現在バッファ内のsignを最適化（signされてないところはsignし直す。markとsignのズレを是正する）コマンドの必要性
 "同じ行に複数signすると同一signIDが振られてしまう問題。→head番号をgroupidx+1にする？
 

@@ -12,6 +12,7 @@
 <Plug>(signage-groups-menu-shift)	signage.jax	/*<Plug>(signage-groups-menu-shift)*
 <Plug>(signage-input)	signage.jax	/*<Plug>(signage-input)*
 <Plug>(signage-marking)	signage.jax	/*<Plug>(signage-marking)*
+<Plug>(signage-move)	signage.jax	/*<Plug>(signage-move)*
 <Plug>(signage-next)	signage.jax	/*<Plug>(signage-next)*
 <Plug>(signage-next-all)	signage.jax	/*<Plug>(signage-next-all)*
 <Plug>(signage-prev)	signage.jax	/*<Plug>(signage-prev)*
@@ -40,4 +41,4 @@ signage-supplementary	signage.jax	/*signage-supplementary*
 signage-unite	signage.jax	/*signage-unite*
 signage-variables	signage.jax	/*signage-variables*
 signage.jax	signage.jax	/*signage.jax*
-unite-signage	signage.jax	/*unite-signage*
+unite-source-signage	signage.jax	/*unite-source-signage*

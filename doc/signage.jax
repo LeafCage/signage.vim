@@ -16,6 +16,7 @@ CONTENTS					*signage-contents*
 補足説明			|signage-supplementary|
 注意				|signage-attention|
 仕様・不具合			|signage-specification|
+CHANGELOG			|signage-changelog|
 
 ==============================================================================
 簡単な説明					*signage-quicktutorial*
@@ -40,9 +41,10 @@ CONTENTS					*signage-contents*
 配布ファイルをVimスクリプトのディレクトリへ置く。
 (普通は ~/.vim/ またはWindowsの場合、 $HOME/vimfiles)
 
-動作にlclibが必要。 https://github.com/LeafCage/lclib
+動作にlclibが必要。
+<https://github.com/LeafCage/lclib>
 また、uniteインターフェイスを使うときにはunite.vimが必要。
-https://github.com/Shougo/unite.vim
+<https://github.com/Shougo/unite.vim>
 
 インストール後はグローバル変数|signage-variables|の設定をするとより快適に。
 
@@ -130,6 +132,12 @@ https://github.com/Shougo/unite.vim
 <Plug>(signage-marking)				*<Plug>(signage-marking)*
 (既定: nmap mm)
 	カーソル位置をマークする。すでにマークがある場合はマーク解除する。
+
+
+<Plug>(signage-move)				*<Plug>(signage-move)*
+(既定: nmap mv)
+	最後にマークしたマークを削除し、現在カーソル位置にマークし直す。
+	最後にマークしたマークがカレントバッファにある場合のみ有効。
 
 
 <Plug>(signage-input)				*<Plug>(signage-input)*
@@ -240,10 +248,10 @@ https://github.com/Shougo/unite.vim
 	コマンド|:SignageEditfile|と同じ。
 
 
-unite.vim						*signage-unite*
+unite.vim					*signage-unite*
 ---------
 
-:Unite signage					*unite-signage*
+:Unite signage					*unite-source-signage*
 	全てのマークの一覧メニューを出す。選択してジャンプすることが出来る。
 	残念ながらdelete機能などは付けていない。
 	（将来的には機能を増やすかも）
@@ -370,6 +378,7 @@ CHANGELOG					*signage-changelog*
 
 1.0:
 - AltMarksからsignageに名称変更
+- 位置記録主体からsign主体に仕様変更
 0.1:
 - Altmarksとして公開
 
